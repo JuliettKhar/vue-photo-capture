@@ -13,7 +13,7 @@ process.stdin.on('data', chunk => {
   code += chunk;
 });
 process.stdin.on('end', () => {
-  reviewer.submitCode(code)
+  reviewer.submitCodeAssistanceMode(code)
     .then((feedback) => {
       console.log('Code Review Feedback:');
       console.log(feedback);
