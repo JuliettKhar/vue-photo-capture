@@ -40,7 +40,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          node ./review-helper.js < pr.diff > review_feedback.txt
+          node ./review-helper.mjs < pr.diff > review_feedback.txt
 
       - name: Post review feedback as a comment
         env:
