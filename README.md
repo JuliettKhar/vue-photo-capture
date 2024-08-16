@@ -1,14 +1,17 @@
 # Vue Photo Capture
 A Vue 2 Composition API library for capturing photos using a webcam or camera device. This library simplifies the process of setting up video streams, capturing photos, and managing resources, making it easy to integrate photo capture functionality into your Vue.js applications.
 
-[//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/reviewer-lib&#41;)
-[//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/reviewer-lib&#41;)
+[//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
+[//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Coverage]&#40;https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture&#41;)
-![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/deploy.yml)
-![Downloads](https://img.shields.io/npm/dt/vue-photo-capture)
+[//]: # (![Downloads]&#40;https://img.shields.io/npm/dt/vue-photo-capture&#41;)
 ![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
 ![Minified Size](https://img.shields.io/bundlephobia/min/vue-photo-capture)
+![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/.github/workflows/check-app.yml)
 ![Open Issues](https://img.shields.io/github/issues/JuliettKhar/vue-photo-capture)
+![License](https://img.shields.io/npm/l/vue-photo-capture)
+![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
+
 ## Features
 
 - **Easy Video Stream Setup**: Quickly initialize video streams with custom options.
@@ -27,7 +30,6 @@ npm install vue-photo-capture
   </div>
 </template>
 ```
-or
 ```vue
 <template>
   <div>
