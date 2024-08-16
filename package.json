@@ -1,7 +1,7 @@
 {
   "name": "vue-photo-capture",
   "version": "1.0.0",
-  "description": "A Vue 3 package using the Composition API",
+  "description": "A Vue 2 Composition API library for capturing photos using a webcam or camera device.",
   "main": "dist/vue-photo-capture.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -12,11 +12,11 @@
     "build": "vite build",
     "lint": "eslint src --ext .js,.vue",
     "test": "jest",
-    "deploy": "npm publish"
+    "deploy": "npm publish --non-interactive  --verbose"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/your-repo.git"
+    "url": "https://github.com/JuliettKhar/vue-photo-capture.git"
   },
   "keywords": [
     "vue",
@@ -43,7 +43,6 @@
     "vite": "^4.0.0"
   },
   "dependencies": {
-    "user": "^0.0.0",
     "vue": "^3.0.0"
   }
 }
