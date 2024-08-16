@@ -26,6 +26,6 @@ jobs:
         run:  |
           npm ci
           npm config set //registry.npmjs.org/:_authToken ${NODE_AUTH_TOKEN}
-          npm run publish --non-interactive  --verbose
+          npm run deploy
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
