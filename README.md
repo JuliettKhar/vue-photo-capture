@@ -21,16 +21,23 @@ npm install vue-photo-capture
 ```vue
 <template>
   <div>
-    <video ref="videoElement" v-if="videoForScreenShot" autoplay playsinline></video>
+    <video ref="videoElement" :srcObject="videoStream" autoplay playsinline></video>
+    <img :src="imgUrl" alt="photo">
     <button @click="capturePhoto(videoElement)">Capture Photo</button>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { usePhotoCapture } from 'vue-photo-capture';
 
-const { videoForScreenShot, screenshotVideoBlob, setUpVideoForScreenshot, capturePhoto } = usePhotoCapture();
+const {   
+  screenshotVideoBlob, 
+  videoStream,
+  setUpVideoForScreenshot,
+  capturePhoto
+} = usePhotoCapture();
+const imgUrl = computed(() => screenshotVideoBlob.value ? URL.createObjectURL(screenshotVideoBlob.value) : '')
 
 onMounted(async () => {
   await setUpVideoForScreenshot();
@@ -38,24 +45,32 @@ onMounted(async () => {
 </script>
 ```
 ## API
-`usePhotoCapture`.
-The usePhotoCapture function provides a set of reactive properties and methods to handle photo capture.
+The `usePhotoCapture` function provides a set of reactive properties and methods to handle photo capture.
 
-**Properties:**
+**Properties**:
+- `videoForScreenShot`: A reactive reference to the HTML `<video>` element used for capturing photos.
+- `screenshotVideoBlob`: A reactive reference to the captured photo as a Blob object.
+- `videoStream`: A reactive reference to the MediaStream object representing the video stream.
 
-- videoForScreenShot: A reactive reference to the HTML `<video>` element used for capturing photos.
-- screenshotVideoBlob: A reactive reference to the captured photo as a Blob object.
-- videoStream: A reactive reference to the MediaStream object representing the video stream.
-
-**Methods:**
-- setUpVideoForScreenshot(videoOptions: Object): Promise<void>: Sets up the video stream with the given options and binds it to the videoForScreenShot element.
-- capturePhoto(videoElement: HTMLVideoElement): void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
+**Methods**:
+- `setUpVideoForScreenshot(videoOptions?: Object)`: Promise<void>: Sets up the video stream with the given options and binds it to the videoForScreenShot element.
+ **Default params**:
+```javascript
+{
+  width: {max: 1280, ideal: 1280},
+  height: {min: 400, ideal: 1080},
+  facingMode: {exact: 'user'},
+  frameRate: {min: 15, ideal: 24, max: 30},
+  aspectRatio: {ideal: 1.7777777778},
+}
+```
+- `capturePhoto(videoElement?: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
 
 #### Example with Custom Options
 ```vue
 <script setup>
 import { onMounted } from 'vue';
-import { usePhotoCapture } from 'vue-photo-capture-library';
+import { usePhotoCapture } from 'vue-photo-capture';
 
 const { setUpVideoForScreenshot, capturePhoto } = usePhotoCapture();
 
