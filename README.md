@@ -21,12 +21,22 @@ npm install vue-photo-capture
 ```vue
 <template>
   <div>
-    <video ref="videoElement" :srcObject="videoStream" autoplay playsinline></video>
+    <video playsinline autoplay :srcObject="videoStream"></video>
+    <img :src="imgUrl" alt="photo">
+    <button @click="capturePhoto()">Capture Photo</button>
+  </div>
+</template>
+```
+```vue
+<template>
+  <div>
+    <video width="1280" height="720" ref="videoElement" playsinline autoplay :srcObject="videoStream"></video>
     <img :src="imgUrl" alt="photo">
     <button @click="capturePhoto(videoElement)">Capture Photo</button>
   </div>
 </template>
-
+```
+```vue
 <script setup>
 import { onMounted, computed } from 'vue';
 import { usePhotoCapture } from 'vue-photo-capture';
@@ -54,7 +64,7 @@ The `usePhotoCapture` function provides a set of reactive properties and methods
 
 **Methods**:
 - `setUpVideoForScreenshot(videoOptions?: Object)`: Promise<void>: Sets up the video stream with the given options and binds it to the videoForScreenShot element.
- **Default params**:
+ **Default options**:
 ```javascript
 {
   width: {max: 1280, ideal: 1280},
@@ -64,7 +74,7 @@ The `usePhotoCapture` function provides a set of reactive properties and methods
   aspectRatio: {ideal: 1.7777777778},
 }
 ```
-- `capturePhoto(videoElement?: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
+- `capturePhoto(videoElement: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
 
 #### Example with Custom Options
 ```vue

@@ -1,4 +1,4 @@
-import {ref, UnwrapRef} from 'vue';
+import { ref, UnwrapRef} from 'vue';
 
 
 export function usePhotoCapture() {
