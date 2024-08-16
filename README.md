@@ -1,13 +1,13 @@
 # Vue Photo Capture
 A Vue 2 Composition API library for capturing photos using a webcam or camera device. This library simplifies the process of setting up video streams, capturing photos, and managing resources, making it easy to integrate photo capture functionality into your Vue.js applications.
 
-[//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
-[//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
+[//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/reviewer-lib&#41;)
+[//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/reviewer-lib&#41;)
 [//]: # (![Coverage]&#40;https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture&#41;)
-[//]: # (![Downloads]&#40;https://img.shields.io/npm/dt/vue-photo-capture&#41;)
-[//]: # (![NPM Version]&#40;https://img.shields.io/npm/v/vue-photo-capture&#41;)
-[//]: # (![Minified Size]&#40;https://img.shields.io/bundlephobia/min/vue-photo-capture&#41;)
-![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/.github/workflows/check-app.yml)
+![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/deploy.yml)
+![Downloads](https://img.shields.io/npm/dt/vue-photo-capture)
+![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
+![Minified Size](https://img.shields.io/bundlephobia/min/vue-photo-capture)
 ![Open Issues](https://img.shields.io/github/issues/JuliettKhar/vue-photo-capture)
 ## Features
 
@@ -21,22 +21,12 @@ npm install vue-photo-capture
 ```vue
 <template>
   <div>
-    <video playsinline autoplay :srcObject="videoStream"></video>
-    <img :src="imgUrl" alt="photo">
-    <button @click="capturePhoto()">Capture Photo</button>
-  </div>
-</template>
-```
-```vue
-<template>
-  <div>
-    <video width="1280" height="720" ref="videoElement" playsinline autoplay :srcObject="videoStream"></video>
+    <video ref="videoElement" :srcObject="videoStream" autoplay playsinline></video>
     <img :src="imgUrl" alt="photo">
     <button @click="capturePhoto(videoElement)">Capture Photo</button>
   </div>
 </template>
-```
-```vue
+
 <script setup>
 import { onMounted, computed } from 'vue';
 import { usePhotoCapture } from 'vue-photo-capture';
@@ -64,7 +54,7 @@ The `usePhotoCapture` function provides a set of reactive properties and methods
 
 **Methods**:
 - `setUpVideoForScreenshot(videoOptions?: Object)`: Promise<void>: Sets up the video stream with the given options and binds it to the videoForScreenShot element.
- **Default options**:
+ **Default params**:
 ```javascript
 {
   width: {max: 1280, ideal: 1280},
@@ -74,7 +64,7 @@ The `usePhotoCapture` function provides a set of reactive properties and methods
   aspectRatio: {ideal: 1.7777777778},
 }
 ```
-- `capturePhoto(videoElement: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
+- `capturePhoto(videoElement?: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
 
 #### Example with Custom Options
 ```vue
