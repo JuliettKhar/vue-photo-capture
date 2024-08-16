@@ -27,6 +27,7 @@ npm install vue-photo-capture
   </div>
 </template>
 ```
+or
 ```vue
 <template>
   <div>
