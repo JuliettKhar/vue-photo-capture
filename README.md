@@ -5,10 +5,12 @@ A Vue 2 Composition API library for capturing photos using a webcam or camera de
 [//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Coverage]&#40;https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Downloads]&#40;https://img.shields.io/npm/dt/vue-photo-capture&#41;)
-[//]: # (![NPM Version]&#40;https://img.shields.io/npm/v/vue-photo-capture&#41;)
-[//]: # (![Minified Size]&#40;https://img.shields.io/bundlephobia/min/vue-photo-capture&#41;)
+![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
+![Minified Size](https://img.shields.io/bundlephobia/min/vue-photo-capture)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/.github/workflows/check-app.yml)
 ![Open Issues](https://img.shields.io/github/issues/JuliettKhar/vue-photo-capture)
+![License](https://img.shields.io/npm/l/vue-photo-capture)
+
 ## Features
 
 - **Easy Video Stream Setup**: Quickly initialize video streams with custom options.
