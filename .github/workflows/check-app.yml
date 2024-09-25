@@ -41,6 +41,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           node ./review-helper.mjs < pr.diff > review_feedback.txt
+        continue-on-error: true
 
       - name: Post review feedback as a comment
         env:
