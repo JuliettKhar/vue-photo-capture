@@ -4,7 +4,7 @@ A Vue 2 Composition API library for capturing photos using a webcam or camera de
 [//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Coverage]&#40;https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture&#41;)
-[//]: # (![Downloads]&#40;https://img.shields.io/npm/dt/vue-photo-capture&#41;)
+![Downloads](https://img.shields.io/npm/dt/vue-photo-capture)
 ![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
 ![Minified Size](https://img.shields.io/bundlephobia/min/vue-photo-capture)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/JuliettKhar/vue-photo-capture/.github/workflows/check-app.yml)
@@ -71,7 +71,7 @@ The `usePhotoCapture` function provides a set of reactive properties and methods
 {
   width: {max: 1280, ideal: 1280},
   height: {min: 400, ideal: 1080},
-  facingMode: {exact: 'user'},
+  facingMode: 'user',
   frameRate: {min: 15, ideal: 24, max: 30},
   aspectRatio: {ideal: 1.7777777778},
 }
@@ -90,7 +90,7 @@ onMounted(async () => {
   const customOptions = {
     width: { ideal: 1920 },
     height: { ideal: 1080 },
-    facingMode: { exact: 'environment' }, // Use the rear camera if available
+    facingMode:  'environment', // Use the rear camera if available
   };
   await setUpVideoForScreenshot(customOptions);
 });
