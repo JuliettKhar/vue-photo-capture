@@ -1,4 +1,4 @@
-name: Deploy to npm
+name: deploy to npm
 
 on:
   push:
@@ -28,4 +28,4 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken ${NODE_AUTH_TOKEN}
           npm run deploy
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
