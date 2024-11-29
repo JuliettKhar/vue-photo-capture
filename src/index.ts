@@ -8,7 +8,7 @@ export function usePhotoCapture() {
     const streamOptions = {
         width: {max: 1280, ideal: 1280},
         height: {min: 400, ideal: 1080},
-        facingMode: {exact: 'user'},
+        facingMode: 'user',
         frameRate: {min: 15, ideal: 24, max: 30},
         aspectRatio: {ideal: 1.7777777778},
     }
