@@ -96,6 +96,31 @@ onMounted(async () => {
 });
 </script>
 ```
+If needed to show video:
+```vue
+<script setup>
+import { onMounted } from 'vue';
+import { usePhotoCapture } from 'vue-photo-capture';
+
+const { setUpVideoForScreenshot, capturePhoto } = usePhotoCapture();
+const video = ref(null);
+
+onMounted(async () => {
+  await setUpVideoForScreenshot();
+  
+  if (video.value && 'srcObject' in video.value) {
+    video.value.srcObject = videoStream.value;
+  } else {
+     (video.value).src = URL.createObjectURL(videoStream.value);
+  }
+});
+</script>
+
+<template>
+    <video ref="video" playsinline autoplay src></video>
+</template>
+```
+
 #### Cleanup
 usePhotoCapture automatically cleans up resources when the component is unmounted, resetting all reactive references to null.
 
