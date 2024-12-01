@@ -98,8 +98,6 @@
 
 <script>
     const {usePhotoCapture} = window['vue-photo-capture'] || {};
-    console.log(window)
-    console.log(usePhotoCapture)
     const {createApp, ref, computed, onMounted} = Vue;
     const {
         screenshotVideoBlob,
@@ -113,7 +111,7 @@
     createApp({
         setup() {
             const videoOptions = ref({
-                facingMode: 'environment', // Use front-facing camera
+                facingMode: 'environment',
                 width: 320,
                 height: 240
             });
