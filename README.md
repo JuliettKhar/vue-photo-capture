@@ -120,6 +120,8 @@ onMounted(async () => {
     <video ref="video" playsinline autoplay src></video>
 </template>
 ```
+#### Demo
+[Link](https://juliettkhar.github.io/vue-photo-capture/)
 
 #### Cleanup
 usePhotoCapture automatically cleans up resources when the component is unmounted, resetting all reactive references to null.
