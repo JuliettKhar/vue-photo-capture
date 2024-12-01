@@ -104,7 +104,6 @@
         videoStream,
         setUpVideoForScreenshot,
         capturePhoto,
-        stream
     } = usePhotoCapture();
 
 
@@ -119,7 +118,6 @@
 
 
             const imgUrl = computed(() => screenshotVideoBlob.value ? URL.createObjectURL(screenshotVideoBlob.value) : '')
-            const videoUrl = computed(() => URL.createObjectURL(stream.value))
 
 
             const resetCapture = () => {
@@ -136,10 +134,7 @@
 
             return {
                 capturePhoto,
-                stream,
                 imgUrl,
-                videoUrl,
-                videoStream,
                 video,
                 resetCapture,
             };
