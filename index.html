@@ -124,11 +124,15 @@
                 screenshotVideoBlob.value = null;
             };
             onMounted(async () => {
-                await setUpVideoForScreenshot(videoOptions);
-                if (video.value && 'srcObject' in video.value) {
-                    video.value.srcObject = videoStream.value;
-                } else {
-                    (video.value).src = URL.createObjectURL(videoStream.value);
+                try {
+                    await setUpVideoForScreenshot(videoOptions);
+                    if (video.value && 'srcObject' in video.value) {
+                        video.value.srcObject = videoStream.value;
+                    } else {
+                        (video.value).src = URL.createObjectURL(videoStream.value);
+                    }
+                } catch (e) {
+                    window.alert(`${e.toString()}. Check video settings`)
                 }
             });
 
