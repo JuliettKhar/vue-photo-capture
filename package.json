@@ -40,7 +40,7 @@
     "reviewer-lib": "~1.4.0",
     "ts-jest": "~29.2.4",
     "typescript": "~5.7.2",
-    "vite": "~5.4.8"
+    "vite": "~6.0.6"
   },
   "dependencies": {
     "vue": "~3.5.11"
