@@ -38,7 +38,7 @@
     "jest": "~29.7.0",
     "jest-environment-jsdom": "~29.7.0",
     "lint-staged": "~15.2.10",
-    "reviewer-lib": "~1.4.0",
+    "reviewer-lib": "~1.4.1",
     "ts-jest": "~29.2.4",
     "typescript": "~5.7.2",
     "vite": "~5.4.8"
