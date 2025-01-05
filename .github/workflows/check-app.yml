@@ -40,6 +40,7 @@ jobs:
 
       - name: Test
         run: npm run test
+        working-directory: vue-photo-capture
 
       - name: Get diff from PR
         id: diff
