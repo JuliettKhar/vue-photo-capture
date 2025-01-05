@@ -15,7 +15,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-          path: ./vue-photo-capture
 
       - name: Install jq
         run: sudo apt-get install -y jq
@@ -24,6 +23,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18.x'
+          path: ./vue-photo-capture
 
       - name: Install dependencies
         run: npm install
