@@ -23,6 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
+          path: .
           node-version: '18.x'
 
       - name: Install dependencies
@@ -30,7 +31,6 @@ jobs:
 
       - name: Debug dependencies
         run: |
-          ls node_modules/reviewer-lib
           pwd
           cd ..
           pwd
@@ -44,8 +44,6 @@ jobs:
       - name: Get diff from PR
         id: diff
         run: |
-          pwd
-          cd ..
           git fetch origin
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
 
