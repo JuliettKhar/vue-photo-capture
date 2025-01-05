@@ -30,9 +30,10 @@ jobs:
         run: npm install
         working-directory: vue-photo-capture
 
-#      - name: Debug dependencies
-#        run: |
-#          pwd
+      - name: Debug dependencies
+        working-directory: vue-photo-capture
+        run: |
+          pwd
 
       - name: Build dependencies
         run: npm run build
@@ -49,11 +50,6 @@ jobs:
           git fetch origin
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
 
-      - name: Debug review-helper.mjs
-        run: |
-          ls -l review-helper.mjs
-          ls -R node_modules/reviewer-lib
-
       - name: Run code review
         working-directory: vue-photo-capture
         env:
@@ -62,6 +58,7 @@ jobs:
           node ./review-helper.mjs < pr.diff > review_feedback.txt
 
       - name: Post review feedback as a comment
+        working-directory: vue-photo-capture
         env:
           GITHUB_TOKEN: ${{ secrets.API_GITHUB_TOKEN }}
         run: |
@@ -76,6 +73,7 @@ jobs:
           fi
 
       - name: clean up
+        working-directory: vue-photo-capture
         run: |
           rm -rf node_modules
           rm -rf package-lock.json
