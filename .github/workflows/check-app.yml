@@ -28,9 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Debug dependencies
-        run: |
-          pwd
+#      - name: Debug dependencies
+#        run: |
+#          pwd
 
       - name: Build dependencies
         run: npm run build
@@ -43,6 +43,11 @@ jobs:
         run: |
           git fetch origin
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
+
+      - name: Debug review-helper.mjs
+        run: |
+          ls -l review-helper.mjs
+          ls -R node_modules/reviewer-lib
 
       - name: Run code review
         env:
