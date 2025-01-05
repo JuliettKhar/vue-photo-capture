@@ -43,6 +43,7 @@ jobs:
         working-directory: vue-photo-capture
 
       - name: Get diff from PR
+        working-directory: vue-photo-capture
         id: diff
         run: |
           git fetch origin
