@@ -44,6 +44,8 @@ jobs:
       - name: Get diff from PR
         id: diff
         run: |
+          pwd
+          cd ..
           git fetch origin
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
 
@@ -51,8 +53,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          pwd
-          cd ..
           node ./review-helper.mjs < pr.diff > review_feedback.txt
 
       - name: Post review feedback as a comment
