@@ -28,6 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: vue-photo-capture
 
 #      - name: Debug dependencies
 #        run: |
@@ -35,6 +36,7 @@ jobs:
 
       - name: Build dependencies
         run: npm run build
+        working-directory: vue-photo-capture
 
       - name: Test
         run: npm run test
@@ -51,6 +53,7 @@ jobs:
           ls -R node_modules/reviewer-lib
 
       - name: Run code review
+        working-directory: vue-photo-capture
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
