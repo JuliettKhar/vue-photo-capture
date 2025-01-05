@@ -24,8 +24,17 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Install dependencies and build
-        run: npm install && npm run build
+      - name: Install dependencies
+        run: npm install
+
+      - name: Debug dependencies
+        run: |
+          ls node_modules/reviewer-lib
+          pwd
+          ls -R
+
+      - name: Build dependencies
+        run: npm run build
 
       - name: Test
         run: npm run test
@@ -40,6 +49,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          ls
           node ./review-helper.mjs < pr.diff > review_feedback.txt
 
       - name: Post review feedback as a comment

@@ -1,4 +1,4 @@
-import { Reviewer} from 'reviewer-lib';
+import { Reviewer } from 'reviewer-lib';
 
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
