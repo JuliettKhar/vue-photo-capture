@@ -19,6 +19,7 @@
     "url": "https://github.com/JuliettKhar/vue-photo-capture.git"
   },
   "keywords": [
+    "typescript",
     "vue",
     "composition-api",
     "vue3"
