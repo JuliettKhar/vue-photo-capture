@@ -23,7 +23,6 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          path: .
           node-version: '18.x'
 
       - name: Install dependencies
@@ -31,8 +30,6 @@ jobs:
 
       - name: Debug dependencies
         run: |
-          pwd
-          cd ..
           pwd
 
       - name: Build dependencies
@@ -57,11 +54,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.API_GITHUB_TOKEN }}
         run: |
-          REVIEW_FEEDBACK=$(cat review_feedback.txt)
-          COMMENT_BODY=$(jq -n --arg body "$REVIEW_FEEDBACK" '{body: $body}')
-          PULL_REQUEST_NUMBER=${{ github.event.pull_request.number }}
-          curl -s -H "Authorization: token $GITHUB_TOKEN" -X POST -d "$COMMENT_BODY" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/$PULL_REQUEST_NUMBER/comments"
+          if [ -s review_feedback.txt ]; then
+            REVIEW_FEEDBACK=$(cat review_feedback.txt)
+            COMMENT_BODY=$(jq -n --arg body "$REVIEW_FEEDBACK" '{body: $body}')
+            PULL_REQUEST_NUMBER=${{ github.event.pull_request.number }}
+            curl -s -H "Authorization: token $GITHUB_TOKEN" -X POST -d "$COMMENT_BODY" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/$PULL_REQUEST_NUMBER/comments"
+          else
+            echo "No review feedback to post."
+          fi
 
       - name: clean up
         run: |
