@@ -45,7 +45,7 @@ jobs:
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
 
       - name: Set NODE_PATH
-        run: export NODE_PATH=$PWD/node_modules
+        run: echo "NODE_PATH=$PWD/node_modules" >> $GITHUB_ENV
 
       - name: Run code review
         env:
