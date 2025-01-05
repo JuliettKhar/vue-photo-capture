@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clean working directory
-        run: rm -rf /home/runner/work/vue-photo-capture/vue-photo-capture
-
       - name: Checkout code
         uses: actions/checkout@v2
         with:
@@ -47,6 +44,9 @@ jobs:
         run: |
           git fetch origin
           git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
+
+      - name: Set NODE_PATH
+        run: export NODE_PATH=$PWD/node_modules
 
       - name: Run code review
         env:
