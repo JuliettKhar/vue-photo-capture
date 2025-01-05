@@ -1,11 +1,12 @@
 {
   "name": "vue-photo-capture",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A Vue 2 Composition API library for capturing photos using a webcam or camera device.",
   "main": "dist/vue-photo-capture.mjs",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.MD"
   ],
   "scripts": {
     "serve": "vite",
