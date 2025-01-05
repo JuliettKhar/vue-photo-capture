@@ -1,8 +1,9 @@
-import { Reviewer } from 'reviewer-lib';
 import path from 'path';
 
 console.log('Current directory:', process.cwd());
 console.log('Node modules path:', path.resolve(process.cwd(), 'node_modules/reviewer-lib'));
+
+import { Reviewer } from 'reviewer-lib';
 
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
