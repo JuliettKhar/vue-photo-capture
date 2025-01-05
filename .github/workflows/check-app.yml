@@ -24,7 +24,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18.x'
-          path: ./vue-photo-capture
 
       - name: Install dependencies
         run: npm install
@@ -32,6 +31,8 @@ jobs:
       - name: Debug dependencies
         run: |
           ls node_modules/reviewer-lib
+          pwd
+          cd ..
           pwd
 
       - name: Build dependencies
