@@ -5,7 +5,8 @@
   "main": "dist/vue-photo-capture.mjs",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.MD"
   ],
   "scripts": {
     "serve": "vite",
