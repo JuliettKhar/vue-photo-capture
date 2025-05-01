@@ -41,7 +41,7 @@
     "lint-staged": "~15.3.0",
     "reviewer-lib": "~1.4.0",
     "ts-jest": "~29.2.4",
-    "typescript": "~5.7.2",
+    "typescript": "~5.8.3",
     "vite": "~6.0.7"
   },
   "dependencies": {
