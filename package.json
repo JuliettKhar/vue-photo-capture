@@ -28,7 +28,7 @@
   "author": "Julia Kharlamova",
   "license": "MIT",
   "devDependencies": {
-    "@jest/globals": "~29.7.0",
+    "@jest/globals": "~30.0.5",
     "@rushstack/eslint-patch": "~1.10.4",
     "@types/jest": "~29.5.12",
     "@vitejs/plugin-vue": "~5.2.1",
