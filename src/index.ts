@@ -26,7 +26,7 @@ export function usePhotoCapture() {
             videoForScreenShot.value.srcObject = stream;
             videoStream.value = stream;
         } catch (e: Error | any) {
-            throw new Error(e?.message || e.toString());
+            throw new Error(e?.message || e.toString(), { cause: e });
         }
     }
 
