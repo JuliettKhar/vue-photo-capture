@@ -101,6 +101,30 @@ describe('usePhotoCapture', () => {
         expect(screenshotVideoBlob.value).toBe(mockBlob);
     });
 
+    it('should fall back to videoWidth/videoHeight for CSS-sized video elements', async () => {
+        const mockBlob = new Blob();
+        const mockCanvas = {
+            width: 0,
+            height: 0,
+            getContext: jest.fn().mockReturnValue({drawImage: jest.fn()}),
+            toBlob: jest.fn((callback) => callback(mockBlob)),
+        };
+        const realCreateElement = document.createElement.bind(document);
+        jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+            tag === 'canvas' ? (mockCanvas as any) : realCreateElement(tag),
+        );
+
+        // width/height attributes are 0 (CSS-sized), only intrinsic size is known
+        const videoElem = {width: 0, height: 0, videoWidth: 640, videoHeight: 480} as any;
+
+        const {capturePhoto} = usePhotoCapture();
+        await expect(capturePhoto(videoElem)).resolves.toBe(mockBlob);
+
+        expect(mockCanvas.width).toBe(640);
+        expect(mockCanvas.height).toBe(480);
+        expect(mockCanvas.getContext().drawImage).toHaveBeenCalledWith(videoElem, 0, 0, 640, 480);
+    });
+
     it('should reject when there is no video element to capture from', async () => {
         const {capturePhoto, error} = usePhotoCapture();
 
@@ -129,5 +153,108 @@ describe('usePhotoCapture', () => {
         expect(videoStream.value).toBeNull();
         expect(videoForScreenShot.value).toBeNull();
         expect(isActive.value).toBe(false);
+    });
+
+    describe('output helpers', () => {
+        it('toObjectURL creates a URL and revokes the previous one', () => {
+            (URL as any).createObjectURL = jest.fn()
+                .mockReturnValueOnce('blob:first')
+                .mockReturnValueOnce('blob:second');
+            const revoke = jest.fn();
+            (URL as any).revokeObjectURL = revoke;
+
+            const {toObjectURL} = usePhotoCapture();
+
+            expect(toObjectURL(new Blob(['a']))).toBe('blob:first');
+            expect(toObjectURL(new Blob(['b']))).toBe('blob:second');
+            expect(revoke).toHaveBeenCalledWith('blob:first');
+        });
+
+        it('toObjectURL throws when nothing has been captured', () => {
+            const {toObjectURL} = usePhotoCapture();
+            expect(() => toObjectURL(null)).toThrow('No photo has been captured yet');
+        });
+
+        it('toFile wraps the blob in a named File', () => {
+            const {toFile} = usePhotoCapture();
+            const file = toFile('shot.png', new Blob(['x'], {type: 'image/png'}));
+            expect(file).toBeInstanceOf(File);
+            expect(file.name).toBe('shot.png');
+            expect(file.type).toBe('image/png');
+        });
+
+        it('toDataURL reads the blob as a data URL', async () => {
+            const {toDataURL} = usePhotoCapture();
+            const dataUrl = await toDataURL(new Blob(['hello'], {type: 'text/plain'}));
+            expect(dataUrl.startsWith('data:')).toBe(true);
+        });
+    });
+
+    describe('device switching', () => {
+        const makeStream = (facingMode: string) => ({
+            getVideoTracks: () => [{
+                getSettings: () => ({width: 1280, height: 720, facingMode}),
+                stop: jest.fn(),
+            }],
+            getTracks: () => [{stop: jest.fn()}],
+        });
+
+        it('switchCamera flips facingMode and restarts the stream', async () => {
+            const gum = jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                .mockResolvedValueOnce(makeStream('user') as any)
+                .mockResolvedValueOnce(makeStream('environment') as any);
+
+            const {setUpVideoForScreenshot, switchCamera, isFrontCamera} = usePhotoCapture();
+
+            await setUpVideoForScreenshot({facingMode: 'user'});
+            expect(isFrontCamera.value).toBe(true);
+
+            await switchCamera();
+
+            expect(gum).toHaveBeenLastCalledWith({video: {facingMode: 'environment'}});
+            expect(isFrontCamera.value).toBe(false);
+        });
+    });
+
+    describe('hardware controls', () => {
+        it('exposes capabilities and applies torch/zoom constraints', async () => {
+            const applyConstraints = jest.fn().mockResolvedValue(undefined);
+            const stream = {
+                getVideoTracks: () => [{
+                    getSettings: () => ({width: 1280, height: 720}),
+                    getCapabilities: () => ({torch: true, zoom: {min: 1, max: 5, step: 0.5}}),
+                    applyConstraints,
+                    stop: jest.fn(),
+                }],
+                getTracks: () => [{stop: jest.fn()}],
+            };
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(stream as any);
+
+            const {setUpVideoForScreenshot, setTorch, setZoom, canTorch, canZoom, zoomRange} = usePhotoCapture();
+
+            await setUpVideoForScreenshot();
+            expect(canTorch.value).toBe(true);
+            expect(canZoom.value).toBe(true);
+            expect(zoomRange.value).toEqual({min: 1, max: 5, step: 0.5});
+
+            await setTorch(true);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{torch: true}]});
+
+            await setZoom(3);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{zoom: 3}]});
+        });
+
+        it('setTorch rejects when the camera is not active', async () => {
+            const {setTorch} = usePhotoCapture();
+            await expect(setTorch(true)).rejects.toThrow('Camera is not active');
+        });
+    });
+
+    describe('barcode scanning', () => {
+        it('scan rejects when BarcodeDetector is unavailable', async () => {
+            const {scan, isBarcodeSupported} = usePhotoCapture();
+            expect(isBarcodeSupported).toBe(false);
+            await expect(scan()).rejects.toThrow('BarcodeDetector is not supported');
+        });
     });
 });
