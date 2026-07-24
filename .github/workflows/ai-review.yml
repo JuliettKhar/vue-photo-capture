@@ -1,0 +1,31 @@
+name: AI code review
+
+# Runs on request only — not on every push:
+#   • add the "ai-review" label to a PR, or
+#   • trigger manually from the Actions tab (enter the PR number).
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to review
+        required: true
+
+jobs:
+  review:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'ai-review'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Run AI code review
+        uses: JuliettKhar/reviewer-lib@9828e5a2f241e602d3951273f14bbe6de4d8db5f # v3.7.1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          pr-number: ${{ github.event.inputs.pr || github.event.pull_request.number }}
+          model: o4-mini
+          exclude: tsconfig.json
