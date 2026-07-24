@@ -157,17 +157,24 @@ describe('usePhotoCapture', () => {
 
     describe('output helpers', () => {
         it('toObjectURL creates a URL and revokes the previous one', () => {
+            const origCreate = URL.createObjectURL;
+            const origRevoke = URL.revokeObjectURL;
+            const revoke = jest.fn();
             (URL as any).createObjectURL = jest.fn()
                 .mockReturnValueOnce('blob:first')
                 .mockReturnValueOnce('blob:second');
-            const revoke = jest.fn();
             (URL as any).revokeObjectURL = revoke;
 
-            const {toObjectURL} = usePhotoCapture();
+            try {
+                const {toObjectURL} = usePhotoCapture();
 
-            expect(toObjectURL(new Blob(['a']))).toBe('blob:first');
-            expect(toObjectURL(new Blob(['b']))).toBe('blob:second');
-            expect(revoke).toHaveBeenCalledWith('blob:first');
+                expect(toObjectURL(new Blob(['a']))).toBe('blob:first');
+                expect(toObjectURL(new Blob(['b']))).toBe('blob:second');
+                expect(revoke).toHaveBeenCalledWith('blob:first');
+            } finally {
+                URL.createObjectURL = origCreate;
+                URL.revokeObjectURL = origRevoke;
+            }
         });
 
         it('toObjectURL throws when nothing has been captured', () => {
