@@ -17,13 +17,10 @@ jobs:
           clean: true
           fetch-depth: 2
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       - name: Install dependencies
         run: npm install
@@ -34,35 +31,11 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Get diff from PR
-        id: diff
-        run: |
-          git fetch origin
-          git diff origin/master HEAD -- . ':!package-lock.json' ':!tsconfig.json' ':!dist/' > pr.diff
-
-      - name: Set NODE_PATH
-        run: echo "NODE_PATH=$PWD/node_modules" >> $GITHUB_ENV
-
-      - name: Run code review
+      - name: Run AI code review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          pwd
-          node ./review-helper.mjs < pr.diff > review_feedback.txt
-
-      - name: Post review feedback as a comment
-        env:
           GITHUB_TOKEN: ${{ secrets.API_GITHUB_TOKEN }}
-        run: |
-          if [ -s review_feedback.txt ]; then
-            REVIEW_FEEDBACK=$(cat review_feedback.txt)
-            COMMENT_BODY=$(jq -n --arg body "$REVIEW_FEEDBACK" '{body: $body}')
-            PULL_REQUEST_NUMBER=${{ github.event.pull_request.number }}
-            curl -s -H "Authorization: token $GITHUB_TOKEN" -X POST -d "$COMMENT_BODY" \
-              "https://api.github.com/repos/${{ github.repository }}/issues/$PULL_REQUEST_NUMBER/comments"
-          else
-            echo "No review feedback to post."
-          fi
+        run: npx reviewer-lib review --pr ${{ github.event.pull_request.number }} --post --exclude tsconfig.json
 
       - name: Clean up
         run: |
