@@ -41,7 +41,7 @@
     "lint-staged": "~15.5.1",
     "ts-jest": "~29.2.4",
     "typescript": "~5.9.3",
-    "vite": "~7.3.6"
+    "vite": "~8.1.5"
   },
   "dependencies": {
     "vue": "~3.5.11"
