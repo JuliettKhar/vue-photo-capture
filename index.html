@@ -238,7 +238,7 @@
             const reset = () => { preview.value = ''; dataUrlLen.value = 0; };
 
             onMounted(start);
-            onBeforeUnmount(stop);
+            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); });
 
             return {
                 video, previewCard, preview, dataUrlLen, scanning, ready, toast, justCaptured,
