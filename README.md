@@ -1,5 +1,5 @@
 # Vue Photo Capture
-A Vue 2 Composition API library for capturing photos using a webcam or camera device. This library simplifies the process of setting up video streams, capturing photos, and managing resources, making it easy to integrate photo capture functionality into your Vue.js applications.
+A Vue 3 Composition API library for capturing photos from a webcam or camera device. It manages the video stream lifecycle, captures frames as `Blob`s, switches cameras, controls torch/zoom and can scan QR/barcodes — with reactive state and automatic cleanup.
 
 [//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
@@ -13,118 +13,153 @@ A Vue 2 Composition API library for capturing photos using a webcam or camera de
 
 ## Features
 
-- **Easy Video Stream Setup**: Quickly initialize video streams with custom options.
-- **Photo Capture**: Capture photos from the video stream and export them as `Blob` objects.
+- **Stream lifecycle** — start/stop the camera with real cleanup (tracks are stopped, no leaked camera light).
+- **Photo capture** — capture the current frame as a `Blob`, with mime type / quality / mirror options.
+- **Output helpers** — `toObjectURL` (auto-revoking), `toDataURL`, `toFile` — no manual memory management.
+- **Camera switching** — list `devices`, switch by `deviceId`, or flip front/back.
+- **Hardware controls** — torch/flashlight and zoom via `applyConstraints` (where supported).
+- **Barcode / QR scanning** — via the native `BarcodeDetector` (where supported).
+- **Reactive state** — `isSupported`, `isActive`, `error`, `permission`, `isFrontCamera`, capability flags.
+
 ## Installation
 ```shell
 npm install vue-photo-capture
 ```
+> `vue@^3` is a peer dependency — the library uses the Vue already installed in your app.
+
 ## Usage
 ```vue
-<template>
-  <div>
-    <video playsinline autoplay :srcObject="videoStream"></video>
-    <img :src="imgUrl" alt="photo">
-    <button @click="capturePhoto()">Capture Photo</button>
-  </div>
-</template>
-```
-```vue
-<template>
-  <div>
-    <video width="1280" height="720" ref="videoElement" playsinline autoplay :srcObject="videoStream"></video>
-    <img :src="imgUrl" alt="photo">
-    <button @click="capturePhoto(videoElement)">Capture Photo</button>
-  </div>
-</template>
-```
-```vue
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import { usePhotoCapture } from 'vue-photo-capture';
 
-const {   
-  screenshotVideoBlob, 
+const video = ref(null);
+const preview = ref('');
+
+const {
   videoStream,
   setUpVideoForScreenshot,
-  capturePhoto
+  capturePhoto,
+  toObjectURL,
+  error,
 } = usePhotoCapture();
-const imgUrl = computed(() => screenshotVideoBlob.value ? URL.createObjectURL(screenshotVideoBlob.value) : '')
 
 onMounted(async () => {
   await setUpVideoForScreenshot();
+  video.value.srcObject = videoStream.value;
 });
-</script>
-```
-## API
-The `usePhotoCapture` function provides a set of reactive properties and methods to handle photo capture.
 
-**Properties**:
-- `videoForScreenShot`: A reactive reference to the HTML `<video>` element used for capturing photos.
-- `screenshotVideoBlob`: A reactive reference to the captured photo as a Blob object.
-- `videoStream`: A reactive reference to the MediaStream object representing the video stream.
-
-**Methods**:
-- `setUpVideoForScreenshot(videoOptions?: Object)`: Promise<void>: Sets up the video stream with the given options and binds it to the videoForScreenShot element.
- **Default options**:
-```javascript
-{
-  width: {max: 1280, ideal: 1280},
-  height: {min: 400, ideal: 1080},
-  facingMode: 'user',
-  frameRate: {min: 15, ideal: 24, max: 30},
-  aspectRatio: {ideal: 1.7777777778},
+async function takePhoto() {
+  await capturePhoto(video.value);
+  preview.value = toObjectURL(); // auto-revokes the previous URL
 }
-```
-- `capturePhoto(videoElement: HTMLVideoElement)`: void: Captures a photo from the provided video element and stores it as a Blob in screenshotVideoBlob.
-
-#### Example with Custom Options
-```vue
-<script setup>
-import { onMounted } from 'vue';
-import { usePhotoCapture } from 'vue-photo-capture';
-
-const { setUpVideoForScreenshot, capturePhoto } = usePhotoCapture();
-
-onMounted(async () => {
-  const customOptions = {
-    width: { ideal: 1920 },
-    height: { ideal: 1080 },
-    facingMode:  'environment', // Use the rear camera if available
-  };
-  await setUpVideoForScreenshot(customOptions);
-});
-</script>
-```
-If needed to show video:
-```vue
-<script setup>
-import { onMounted } from 'vue';
-import { usePhotoCapture } from 'vue-photo-capture';
-
-const { setUpVideoForScreenshot, capturePhoto } = usePhotoCapture();
-const video = ref(null);
-
-onMounted(async () => {
-  await setUpVideoForScreenshot();
-  
-  if (video.value && 'srcObject' in video.value) {
-    video.value.srcObject = videoStream.value;
-  } else {
-     (video.value).src = URL.createObjectURL(videoStream.value);
-  }
-});
 </script>
 
 <template>
-    <video ref="video" playsinline autoplay src></video>
+  <video ref="video" playsinline autoplay></video>
+  <button @click="takePhoto">Capture Photo</button>
+  <img v-if="preview" :src="preview" alt="photo" />
+  <p v-if="error">{{ error.message }}</p>
 </template>
 ```
-#### Demo
-[Link](https://juliettkhar.github.io/vue-photo-capture/)
 
-#### Cleanup
-usePhotoCapture automatically cleans up resources when the component is unmounted, resetting all reactive references to null.
+The composable **automatically stops all tracks on unmount** (disable via `usePhotoCapture({ autoCleanup: false })` and call `stop()` yourself).
+
+## API
+
+`usePhotoCapture(options?)` returns:
+
+### State
+| Property | Type | Description |
+|---|---|---|
+| `videoForScreenShot` | `Ref<HTMLVideoElement \| null>` | Internal `<video>` bound to the stream. |
+| `screenshotVideoBlob` | `Ref<Blob \| null>` | Most recently captured photo. |
+| `videoStream` | `Ref<MediaStream \| null>` | Active media stream. |
+| `isSupported` | `boolean` | `getUserMedia` availability (SSR-safe). |
+| `isActive` | `Ref<boolean>` | Whether a stream is running. |
+| `error` | `Ref<Error \| null>` | Last setup/capture error (preserves the original `DOMException`). |
+| `permission` | `Ref<'prompt' \| 'granted' \| 'denied' \| 'unknown'>` | Camera permission state. |
+| `devices` | `Ref<MediaDeviceInfo[]>` | Available video input devices. |
+| `currentDeviceId` | `Ref<string \| null>` | Active device id. |
+| `isFrontCamera` | `Ref<boolean>` | `true` when the active camera faces the user. |
+| `canTorch` / `canZoom` | `Ref<boolean>` | Hardware capability flags. |
+| `zoomRange` | `Ref<{ min, max, step } \| null>` | Allowed zoom range. |
+| `torchOn` / `zoom` | `Ref<boolean>` / `Ref<number>` | Current torch/zoom values. |
+| `isBarcodeSupported` | `boolean` | `BarcodeDetector` availability. |
+| `detectedCodes` | `Ref<DetectedBarcode[]>` | Codes from the last scan. |
+
+### Methods
+| Method | Description |
+|---|---|
+| `setUpVideoForScreenshot(constraints?)` | Request the camera and start the stream. |
+| `capturePhoto(video?, { type?, quality?, mirror? })` | Capture a frame → `Promise<Blob>`. |
+| `stop()` | Stop all tracks and reset state. |
+| `refreshDevices()` | Re-enumerate video devices. |
+| `switchCamera(deviceId?)` | Switch to a device, or flip front/back with no argument. |
+| `toObjectURL(blob?)` | `blob:` URL for `<img>`, auto-revoking the previous one. |
+| `toDataURL(blob?)` | `Promise<string>` base64 data URL. |
+| `toFile(name?, blob?)` | Wrap the photo in a `File` for uploads. |
+| `setTorch(on)` / `setZoom(value)` | Control torch/zoom (throws if unsupported). |
+| `scan(source?)` | Detect codes in one frame → `Promise<DetectedBarcode[]>`. |
+| `startScanning(onDetect?)` / `stopScanning()` | Continuous scanning loop. |
+
+**Default constraints** passed to `getUserMedia`:
+```javascript
+{
+  width: { max: 1280, ideal: 1280 },
+  height: { min: 400, ideal: 1080 },
+  facingMode: 'user',
+  frameRate: { min: 15, ideal: 24, max: 30 },
+  aspectRatio: { ideal: 16 / 9 },
+}
+```
+
+## Examples
+
+### Switch cameras
+```vue
+<script setup>
+const { devices, currentDeviceId, switchCamera } = usePhotoCapture();
+// after setUpVideoForScreenshot() the `devices` list is populated with labels
+</script>
+
+<template>
+  <select :value="currentDeviceId" @change="switchCamera($event.target.value)">
+    <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">{{ d.label }}</option>
+  </select>
+  <button @click="switchCamera()">Flip front/back</button>
+</template>
+```
+
+### Torch & zoom
+```js
+const { canTorch, canZoom, zoomRange, setTorch, setZoom } = usePhotoCapture();
+if (canTorch.value) await setTorch(true);
+if (canZoom.value) await setZoom(zoomRange.value.max);
+```
+
+### Scan QR / barcodes
+```js
+const { isBarcodeSupported, startScanning, stopScanning } = usePhotoCapture();
+if (isBarcodeSupported) {
+  startScanning((codes) => console.log(codes[0].rawValue));
+}
+```
+
+### Upload the photo
+```js
+const { capturePhoto, toFile } = usePhotoCapture();
+await capturePhoto(videoEl);
+const form = new FormData();
+form.append('photo', toFile('capture.png'));
+await fetch('/upload', { method: 'POST', body: form });
+```
+
+> **Browser support:** `torch`, `zoom` and `BarcodeDetector` are progressive enhancements —
+> mainly Chromium/Android. Always gate them behind `canTorch` / `canZoom` / `isBarcodeSupported`.
+
+## Demo
+[Live demo](https://juliettkhar.github.io/vue-photo-capture/) · source in [`index.html`](./index.html).
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.

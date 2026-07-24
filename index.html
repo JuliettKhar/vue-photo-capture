@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Vue Photo Capture Demo</title>
+    <style>
+        :root { --accent: #4CAF50; --bg: #f6f7f9; --card: #fff; --border: #e2e5e9; }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, Arial, sans-serif; background: var(--bg); margin: 0; color: #1c1e21; }
+        .app { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+        h1 { text-align: center; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .stage { position: relative; width: 100%; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 4 / 3; }
+        video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        video.mirrored { transform: scaleX(-1); }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+        button { padding: 9px 16px; font-size: 15px; cursor: pointer; background: var(--accent); color: #fff; border: none; border-radius: 8px; }
+        button.secondary { background: #eceef1; color: #1c1e21; }
+        button:disabled { opacity: .45; cursor: not-allowed; }
+        select, input[type=range] { padding: 6px; }
+        label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+        .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+        .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); }
+        .badge.on { background: #e6f4ea; border-color: #b7e1c3; color: #1e7a34; }
+        .badge.off { background: #fdecea; border-color: #f5c6c2; color: #b3261e; }
+        .badge.neutral { background: #eef1f4; }
+        .preview img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+        .muted { color: #65686c; font-size: 14px; }
+        .error { color: #b3261e; }
+        code { background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
+        h3 { margin: 0 0 8px; font-size: 15px; }
+        .disabled-note { font-size: 12px; color: #8a8d91; }
+        .toast {
+            position: fixed; left: 50%; top: 24px; transform: translateX(-50%);
+            background: #1e7a34; color: #fff; padding: 12px 20px; border-radius: 999px;
+            font-size: 15px; box-shadow: 0 6px 20px rgba(0,0,0,.2); z-index: 1000;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toast-fade-enter-active, .toast-fade-leave-active { transition: opacity .25s, transform .25s; }
+        .toast-fade-enter-from, .toast-fade-leave-to { opacity: 0; transform: translate(-50%, -12px); }
+        .preview.highlight { animation: flash 1s ease; }
+        @keyframes flash { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: none; } }
+    </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="./dist/vue-photo-capture.umd.js"></script>
+</head>
+
+<body>
+<div id="app">
+    <transition name="toast-fade">
+        <div class="toast" v-if="toast">{{ toast }}</div>
+    </transition>
+    <div class="app">
+        <h1>📸 Vue Photo Capture</h1>
+
+        <!-- Reactive status -->
+        <div class="card">
+            <div class="badges">
+                <span class="badge" :class="isSupported ? 'on' : 'off'">getUserMedia: {{ isSupported ? 'yes' : 'no' }}</span>
+                <span class="badge" :class="isActive ? 'on' : 'neutral'">stream: {{ isActive ? 'active' : 'idle' }}</span>
+                <span class="badge neutral">permission: {{ permission }}</span>
+                <span class="badge" :class="isFrontCamera ? 'on' : 'neutral'">{{ isFrontCamera ? 'front' : 'back' }} camera</span>
+                <span class="badge" :class="canTorch ? 'on' : 'off'">torch</span>
+                <span class="badge" :class="canZoom ? 'on' : 'off'">zoom</span>
+                <span class="badge" :class="isBarcodeSupported ? 'on' : 'off'">BarcodeDetector</span>
+            </div>
+            <p v-if="error" class="error">⚠️ {{ error.message }}</p>
+        </div>
+
+        <!-- Camera stage -->
+        <div class="card">
+            <div class="stage">
+                <video ref="video" :class="{ mirrored: isFrontCamera }" playsinline autoplay muted
+                       @loadedmetadata="ready = true" @playing="ready = true"></video>
+            </div>
+
+            <div class="row">
+                <button v-if="!isActive" @click="start">Start camera</button>
+                <button v-else class="secondary" @click="stop">Stop</button>
+                <button @click="takePhoto" :disabled="!isActive || !ready">
+                    {{ isActive && !ready ? 'Preparing…' : 'Capture photo' }}
+                </button>
+                <button class="secondary" @click="switchCamera()" :disabled="!isActive">Flip front/back</button>
+            </div>
+
+            <!-- Device picker -->
+            <div class="row" v-if="devices.length">
+                <label>
+                    Camera:
+                    <select :value="currentDeviceId" @change="switchCamera($event.target.value)">
+                        <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">
+                            {{ d.label || ('Camera ' + (d.deviceId || '').slice(0, 6)) }}
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <!-- Hardware controls -->
+        <div class="card">
+            <h3>Hardware controls</h3>
+            <div class="row">
+                <button class="secondary" @click="toggleTorch" :disabled="!canTorch">
+                    Torch: {{ torchOn ? 'on' : 'off' }}
+                </button>
+                <span v-if="!canTorch" class="disabled-note">torch not supported on this camera</span>
+            </div>
+            <div class="row" v-if="canZoom && zoomRange">
+                <label style="flex:1">
+                    Zoom {{ Number(zoom).toFixed(1) }}×
+                    <input type="range" style="flex:1"
+                           :min="zoomRange.min" :max="zoomRange.max" :step="zoomRange.step"
+                           :value="zoom" @input="onZoom($event.target.value)"/>
+                </label>
+            </div>
+            <p v-else class="disabled-note">zoom not supported on this camera</p>
+        </div>
+
+        <!-- Barcode / QR -->
+        <div class="card">
+            <h3>QR / barcode scanning</h3>
+            <div class="row">
+                <button class="secondary" @click="toggleScan" :disabled="!isActive || !isBarcodeSupported">
+                    {{ scanning ? 'Stop scanning' : 'Start scanning' }}
+                </button>
+                <span v-if="!isBarcodeSupported" class="disabled-note">BarcodeDetector unavailable (try Chrome/Android)</span>
+            </div>
+            <ul v-if="detectedCodes.length">
+                <li v-for="(c, i) in detectedCodes" :key="i"><code>{{ c.format }}</code> → {{ c.rawValue }}</li>
+            </ul>
+            <p v-else class="muted">No codes detected yet.</p>
+        </div>
+
+        <!-- Captured photo + output helpers -->
+        <div class="card preview" :class="{ highlight: justCaptured }" ref="previewCard" v-if="preview">
+            <h3>Captured photo</h3>
+            <img :src="preview" alt="Captured photo"/>
+            <div class="row">
+                <button class="secondary" @click="download">Download (toFile)</button>
+                <button class="secondary" @click="copyDataUrl">Copy data URL (toDataURL)</button>
+                <button class="secondary" @click="reset">Reset</button>
+            </div>
+            <p class="muted" v-if="dataUrlLen">data URL length: {{ dataUrlLen }} chars</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { usePhotoCapture } = window['vue-photo-capture'] || {};
+    const { createApp, ref, nextTick, onMounted, onBeforeUnmount } = Vue;
+
+    createApp({
+        setup() {
+            const api = usePhotoCapture();
+            const {
+                videoStream, isSupported, isActive, error, permission,
+                devices, currentDeviceId, isFrontCamera,
+                canTorch, canZoom, zoomRange, torchOn, zoom,
+                isBarcodeSupported, detectedCodes,
+                setUpVideoForScreenshot, capturePhoto, stop: stopCamera,
+                switchCamera: switchCam, toObjectURL, toDataURL, toFile,
+                setTorch, setZoom, startScanning, stopScanning,
+            } = api;
+
+            const video = ref(null);
+            const previewCard = ref(null);
+            const preview = ref('');
+            const dataUrlLen = ref(0);
+            const scanning = ref(false);
+            const ready = ref(false); // video has decoded a frame and has dimensions
+            const toast = ref('');
+            const justCaptured = ref(false);
+            let toastTimer = null;
+
+            const showToast = (message) => {
+                toast.value = message;
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => { toast.value = ''; }, 2500);
+            };
+
+            const bindStream = async () => {
+                if (!video.value) return;
+                ready.value = false;
+                video.value.srcObject = videoStream.value;
+                try { await video.value.play(); } catch (e) { /* autoplay may need a gesture */ }
+            };
+
+            const start = async () => {
+                try {
+                    await setUpVideoForScreenshot();
+                    await bindStream();
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const stop = () => { scanning.value = false; ready.value = false; stopCamera(); };
+
+            const switchCamera = async (deviceId) => {
+                scanning.value = false;
+                try { await switchCam(deviceId); await bindStream(); }
+                catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const takePhoto = async () => {
+                try {
+                    await capturePhoto(video.value, { mirror: isFrontCamera.value });
+                    preview.value = toObjectURL(); // auto-revokes the previous URL
+                    showToast('📸 Photo captured!');
+                    justCaptured.value = false;
+                    await nextTick();
+                    justCaptured.value = true; // retrigger the flash animation
+                    previewCard.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const toggleTorch = () => setTorch(!torchOn.value).catch(() => {});
+            const onZoom = (v) => setZoom(Number(v)).catch(() => {});
+
+            const toggleScan = () => {
+                if (scanning.value) { stopScanning(); scanning.value = false; }
+                else { startScanning(); scanning.value = true; }
+            };
+
+            const download = () => {
+                const file = toFile('photo.png');
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url; a.download = file.name; a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const copyDataUrl = async () => {
+                const dataUrl = await toDataURL();
+                dataUrlLen.value = dataUrl.length;
+                try { await navigator.clipboard.writeText(dataUrl); } catch (e) { /* clipboard blocked */ }
+            };
+
+            const reset = () => { preview.value = ''; dataUrlLen.value = 0; };
+
+            onMounted(start);
+            onBeforeUnmount(stop);
+
+            return {
+                video, previewCard, preview, dataUrlLen, scanning, ready, toast, justCaptured,
+                isSupported, isActive, error, permission,
+                devices, currentDeviceId, isFrontCamera,
+                canTorch, canZoom, zoomRange, torchOn, zoom,
+                isBarcodeSupported, detectedCodes,
+                start, stop, switchCamera, takePhoto,
+                toggleTorch, onZoom, toggleScan, download, copyDataUrl, reset,
+            };
+        },
+    }).mount('#app');
+</script>
+</body>
+</html>
