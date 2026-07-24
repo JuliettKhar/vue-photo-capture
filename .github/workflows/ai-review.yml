@@ -23,9 +23,10 @@ jobs:
 
     steps:
       - name: Run AI code review
-        uses: JuliettKhar/reviewer-lib@9828e5a2f241e602d3951273f14bbe6de4d8db5f # v3.7.1
+        uses: JuliettKhar/reviewer-lib@v3
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           pr-number: ${{ github.event.inputs.pr || github.event.pull_request.number }}
           model: o4-mini
+          version: latest
           exclude: tsconfig.json
