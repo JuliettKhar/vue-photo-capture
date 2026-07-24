@@ -32,7 +32,7 @@
     "@jest/globals": "~30.2.0",
     "@types/jest": "~29.5.12",
     "@vitejs/plugin-vue": "~6.0.8",
-    "@vue/eslint-config-typescript": "~14.6.0",
+    "@vue/eslint-config-typescript": "~14.9.0",
     "@vue/test-utils": "~2.4.6",
     "eslint": "~9.36.0",
     "eslint-plugin-vue": "~9.32.0",
