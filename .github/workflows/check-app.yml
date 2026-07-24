@@ -10,10 +10,6 @@ jobs:
   check:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      pull-requests: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,12 +30,6 @@ jobs:
 
       - name: Test
         run: npm run test
-
-      - name: Run AI code review
-        uses: JuliettKhar/reviewer-lib@v3
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          exclude: tsconfig.json
 
       - name: Clean up
         run: |
