@@ -1,3 +1,4 @@
+import { ComputedRef } from 'vue';
 import { Ref } from 'vue';
 import { ShallowRef } from 'vue';
 
@@ -96,6 +97,20 @@ export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly isFrontCamera: Ref<boolean, boolean>;
     readonly refreshDevices: () => Promise<MediaDeviceInfo[]>;
     readonly switchCamera: (deviceId?: string) => Promise<void>;
+    readonly resolution: Ref<{
+        width: number;
+        height: number;
+    } | null, {
+        width: number;
+        height: number;
+    } | {
+        width: number;
+        height: number;
+    } | null>;
+    readonly aspectRatio: Ref<number | null, number | null>;
+    readonly mirrorStyle: ComputedRef<    {
+    transform: string;
+    }>;
     readonly toObjectURL: (blob?: Blob | null) => string;
     readonly toDataURL: (blob?: Blob | null) => Promise<string>;
     readonly toFile: (name?: string, blob?: Blob | null) => File;

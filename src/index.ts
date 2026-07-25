@@ -1,4 +1,4 @@
-import { ref, shallowRef, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue';
+import { ref, shallowRef, computed, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue';
 
 /** Reactive permission state for the camera. */
 export type CameraPermission = 'prompt' | 'granted' | 'denied' | 'unknown';
@@ -83,6 +83,12 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
     const currentDeviceId = ref<string | null>(null);
     const isFrontCamera = ref(false);
 
+    // --- stream info ---------------------------------------------------------
+    const resolution = ref<{ width: number; height: number } | null>(null);
+    const aspectRatio = ref<number | null>(null);
+    /** Inline style that mirrors the preview for the front/selfie camera. */
+    const mirrorStyle = computed(() => ({ transform: isFrontCamera.value ? 'scaleX(-1)' : 'none' }));
+
     // --- hardware controls ---------------------------------------------------
     const canTorch = ref(false);
     const canZoom = ref(false);
@@ -152,11 +158,20 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             throw e;
         }
 
+        const audio = options.audio ?? false;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: videoOptions,
-                audio: options.audio ?? false,
-            });
+            let stream: MediaStream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: videoOptions, audio });
+            } catch (e: unknown) {
+                // If the requested constraints can't be satisfied, retry once with
+                // relaxed constraints instead of failing outright.
+                if ((e as { name?: string })?.name === 'OverconstrainedError') {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio });
+                } else {
+                    throw e;
+                }
+            }
             const track = stream.getVideoTracks()[0];
             const settings = track.getSettings();
 
@@ -173,7 +188,14 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             permission.value = 'granted';
             imageCapture = null; // recreated lazily for the new track
 
-            // hardware capabilities & current device
+            // stream info, hardware capabilities & current device
+            resolution.value =
+                settings.width && settings.height
+                    ? { width: settings.width, height: settings.height }
+                    : null;
+            aspectRatio.value = resolution.value
+                ? resolution.value.width / resolution.value.height
+                : settings.aspectRatio ?? null;
             currentDeviceId.value = settings.deviceId ?? null;
             isFrontCamera.value = settings.facingMode === 'user';
             const caps = (track.getCapabilities?.() ?? {}) as MediaTrackCapabilities & {
@@ -499,6 +521,8 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         canZoom.value = false;
         zoomRange.value = null;
         torchOn.value = false;
+        resolution.value = null;
+        aspectRatio.value = null;
     };
 
     // Only register the lifecycle hook inside an active component instance,
@@ -530,6 +554,10 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         isFrontCamera,
         refreshDevices,
         switchCamera,
+        // stream info
+        resolution,
+        aspectRatio,
+        mirrorStyle,
         // output helpers
         toObjectURL,
         toDataURL,
