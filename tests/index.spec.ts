@@ -332,16 +332,20 @@ describe('usePhotoCapture', () => {
                 toBlob: jest.fn((cb) => cb(mockBlob)),
             };
             const realCreateElement = document.createElement.bind(document);
-            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+            const createElementSpy = jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
                 tag === 'canvas' ? (mockCanvas as any) : realCreateElement(tag),
             );
 
-            const videoRef = ref<any>({width: 0, height: 0, videoWidth: 640, videoHeight: 480});
-            const {takePhoto, isImageCaptureSupported} = usePhotoCapture({videoRef});
+            try {
+                const videoRef = ref<any>({width: 0, height: 0, videoWidth: 640, videoHeight: 480});
+                const {takePhoto, isImageCaptureSupported} = usePhotoCapture({videoRef});
 
-            expect(isImageCaptureSupported).toBe(false);
-            await expect(takePhoto()).resolves.toBe(mockBlob);
-            expect(mockCanvas.width).toBe(640);
+                expect(isImageCaptureSupported).toBe(false);
+                await expect(takePhoto()).resolves.toBe(mockBlob);
+                expect(mockCanvas.width).toBe(640);
+            } finally {
+                createElementSpy.mockRestore();
+            }
         });
     });
 
