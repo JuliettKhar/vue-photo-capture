@@ -1,6 +1,6 @@
-import { getCurrentInstance as e, onUnmounted as t, ref as n, shallowRef as r } from "vue";
+import { getCurrentInstance as e, onUnmounted as t, ref as n, shallowRef as r, watch as i } from "vue";
 //#region src/index.ts
-var i = {
+var a = {
 	width: {
 		max: 1280,
 		ideal: 1280
@@ -17,38 +17,48 @@ var i = {
 	},
 	aspectRatio: { ideal: 16 / 9 }
 };
-function a(a = {}) {
-	let { autoCleanup: o = !0 } = a, s = typeof navigator < "u" && !!navigator.mediaDevices?.getUserMedia, c = typeof window < "u" && "BarcodeDetector" in window, l = n(null), u = n(null), d = r(null), f = n(!1), p = r(null), m = n("unknown"), h = n([]), g = n(null), _ = n(!1), v = n(!1), y = n(!1), b = n(null), x = n(!1), S = n(1), C = n([]), w = null, T = null, E = null, D = !1, O = () => d.value?.getVideoTracks()[0] ?? null, k = () => {
-		A();
-	}, A = async () => {
-		if (!s || !navigator.mediaDevices?.enumerateDevices) return [];
+function o(o = {}) {
+	let { autoCleanup: s = !0 } = o, c = typeof navigator < "u" && !!navigator.mediaDevices?.getUserMedia, l = typeof window < "u" && "BarcodeDetector" in window, u = typeof window < "u" && "ImageCapture" in window, d = typeof window < "u" && "MediaRecorder" in window, f = n(null), p = n(null), m = r(null), h = n(!1), g = r(null), _ = n("unknown"), v = n([]), y = n(null), b = n(!1), x = n(!1), S = n(!1), C = n(null), w = n(!1), T = n(1), E = n([]), D = n(!1), O = n(null), k = null, A = null, j = null, M = !1, N = null, P = null, F = [], I = () => m.value?.getVideoTracks()[0] ?? null, L = () => o.videoRef?.value ?? f.value, R = () => {
+		z();
+	}, z = async () => {
+		if (!c || !navigator.mediaDevices?.enumerateDevices) return [];
 		let e = await navigator.mediaDevices.enumerateDevices();
-		return h.value = e.filter((e) => e.kind === "videoinput"), h.value;
-	}, j = async (e = i) => {
-		if (p.value = null, !s) {
+		return v.value = e.filter((e) => e.kind === "videoinput"), v.value;
+	};
+	o.videoRef && i([m, o.videoRef], async () => {
+		let e = o.videoRef?.value;
+		if (e && (e.srcObject !== m.value && (e.srcObject = m.value), m.value)) try {
+			await e.play();
+		} catch {}
+	}, { flush: "post" });
+	let B = async (e = a) => {
+		if (g.value = null, !c) {
 			let e = /* @__PURE__ */ Error("getUserMedia is not supported in this environment");
-			throw p.value = e, e;
+			throw g.value = e, e;
 		}
 		try {
-			let t = await navigator.mediaDevices.getUserMedia({ video: e }), n = t.getVideoTracks()[0], r = n.getSettings(), i = document.createElement("video");
-			i.setAttribute("autoplay", "true"), i.setAttribute("playsinline", "true"), i.setAttribute("width", String(r.width || 1280)), i.setAttribute("height", String(r.height || 1280)), i.srcObject = t, l.value = i, d.value = t, f.value = !0, m.value = "granted", g.value = r.deviceId ?? null, _.value = r.facingMode === "user";
+			let t = await navigator.mediaDevices.getUserMedia({
+				video: e,
+				audio: o.audio ?? !1
+			}), n = t.getVideoTracks()[0], r = n.getSettings(), i = document.createElement("video");
+			i.setAttribute("autoplay", "true"), i.setAttribute("playsinline", "true"), i.setAttribute("width", String(r.width || 1280)), i.setAttribute("height", String(r.height || 1280)), i.srcObject = t, f.value = i, m.value = t, h.value = !0, _.value = "granted", N = null, y.value = r.deviceId ?? null, b.value = r.facingMode === "user";
 			let a = n.getCapabilities?.() ?? {};
-			v.value = !!a.torch, y.value = !!a.zoom, b.value = a.zoom ? {
+			x.value = !!a.torch, S.value = !!a.zoom, C.value = a.zoom ? {
 				min: a.zoom.min,
 				max: a.zoom.max,
 				step: a.zoom.step ?? .1
-			} : null, x.value = !1, S.value = r.zoom ?? 1, await A(), !D && navigator.mediaDevices.addEventListener && (navigator.mediaDevices.addEventListener("devicechange", k), D = !0);
+			} : null, w.value = !1, T.value = r.zoom ?? 1, await z(), !M && navigator.mediaDevices.addEventListener && (navigator.mediaDevices.addEventListener("devicechange", R), M = !0);
 		} catch (e) {
 			let t = e instanceof Error ? e : Error(String(e), { cause: e });
-			throw (t.name === "NotAllowedError" || t.name === "SecurityError") && (m.value = "denied"), p.value = t, f.value = !1, t;
+			throw (t.name === "NotAllowedError" || t.name === "SecurityError") && (_.value = "denied"), g.value = t, h.value = !1, t;
 		}
-	}, M = async (e) => {
-		let t = _.value;
-		H(), await j(e ? { deviceId: { exact: e } } : { facingMode: t ? "environment" : "user" });
-	}, N = (e = l.value, t = {}) => new Promise((n, r) => {
+	}, V = async (e) => {
+		let t = b.value;
+		$(), await B(e ? { deviceId: { exact: e } } : { facingMode: t ? "environment" : "user" });
+	}, H = (e = L(), t = {}) => new Promise((n, r) => {
 		let i = (e) => {
 			let t = Error(e);
-			p.value = t, r(t);
+			g.value = t, r(t);
 		};
 		if (!e) {
 			i("The video element can not be null");
@@ -71,84 +81,138 @@ function a(a = {}) {
 				i("Failed to capture photo: the canvas produced an empty blob");
 				return;
 			}
-			u.value = e, n(e);
+			p.value = e, n(e);
 		}, t.type, t.quality);
-	}), P = (e = u.value) => {
+	}), U = () => {
+		let e = I();
+		if (!e) throw Error("Camera is not active");
+		return N ??= new window.ImageCapture(e), N;
+	}, W = async (e = {}) => {
+		if (u && I()) try {
+			let e = await U().takePhoto();
+			return p.value = e, e;
+		} catch {}
+		return H(L(), e);
+	}, G = async () => {
+		if (!u) throw Error("ImageCapture is not supported in this browser");
+		return U().grabFrame();
+	}, K = (e = p.value) => {
 		if (!e) throw Error("No photo has been captured yet");
-		return w && URL.revokeObjectURL(w), w = URL.createObjectURL(e), w;
-	}, F = (e = u.value) => new Promise((t, n) => {
+		return k && URL.revokeObjectURL(k), k = URL.createObjectURL(e), k;
+	}, q = (e = p.value) => new Promise((t, n) => {
 		if (!e) {
 			n(/* @__PURE__ */ Error("No photo has been captured yet"));
 			return;
 		}
 		let r = new FileReader();
 		r.onload = () => t(r.result), r.onerror = () => n(r.error ?? /* @__PURE__ */ Error("Failed to read the photo blob")), r.readAsDataURL(e);
-	}), I = (e = "photo.png", t = u.value) => {
+	}), J = (e = "photo.png", t = p.value) => {
 		if (!t) throw Error("No photo has been captured yet");
 		return new File([t], e, { type: t.type || "image/png" });
-	}, L = async (e) => {
-		let t = O();
+	}, Y = async (e) => {
+		let t = I();
 		if (!t) throw Error("Camera is not active");
-		if (!v.value) throw Error("Torch is not supported by this camera");
-		await t.applyConstraints({ advanced: [{ torch: e }] }), x.value = e;
-	}, R = async (e) => {
-		let t = O();
+		if (!x.value) throw Error("Torch is not supported by this camera");
+		await t.applyConstraints({ advanced: [{ torch: e }] }), w.value = e;
+	}, X = async (e) => {
+		let t = I();
 		if (!t) throw Error("Camera is not active");
-		if (!y.value) throw Error("Zoom is not supported by this camera");
-		await t.applyConstraints({ advanced: [{ zoom: e }] }), S.value = e;
-	}, z = async (e = l.value) => {
-		if (!c) throw Error("BarcodeDetector is not supported in this browser");
+		if (!S.value) throw Error("Zoom is not supported by this camera");
+		await t.applyConstraints({ advanced: [{ zoom: e }] }), T.value = e;
+	}, ee = (e = {}) => {
+		if (!d) throw Error("MediaRecorder is not supported in this browser");
+		if (!m.value) throw Error("Camera is not active");
+		if (D.value) return;
+		let t = e.mimeType && MediaRecorder.isTypeSupported(e.mimeType) ? e.mimeType : void 0;
+		F = [];
+		let n = new MediaRecorder(m.value, {
+			...t ? { mimeType: t } : {},
+			...e.audioBitsPerSecond ? { audioBitsPerSecond: e.audioBitsPerSecond } : {},
+			...e.videoBitsPerSecond ? { videoBitsPerSecond: e.videoBitsPerSecond } : {}
+		});
+		n.ondataavailable = (e) => {
+			e.data && e.data.size > 0 && F.push(e.data);
+		}, P = n, n.start(e.timeslice), D.value = !0;
+	}, te = () => new Promise((e, t) => {
+		let n = P;
+		if (!n || n.state === "inactive") {
+			t(/* @__PURE__ */ Error("Not recording"));
+			return;
+		}
+		n.onstop = () => {
+			let t = n.mimeType || F[0]?.type || "video/webm", r = new Blob(F, { type: t });
+			O.value = r, D.value = !1, P = null, e(r);
+		}, n.stop();
+	}), ne = () => {
+		P?.state === "recording" && P.pause();
+	}, re = () => {
+		P?.state === "paused" && P.resume();
+	}, Z = async (e = L()) => {
+		if (!l) throw Error("BarcodeDetector is not supported in this browser");
 		if (!e) return [];
-		T ??= new window.BarcodeDetector();
-		let t = await T.detect(e);
-		return C.value = t, t;
-	}, B = (e) => {
-		if (!c) throw Error("BarcodeDetector is not supported in this browser");
+		A ??= new window.BarcodeDetector();
+		let t = await A.detect(e);
+		return E.value = t, t;
+	}, ie = (e) => {
+		if (!l) throw Error("BarcodeDetector is not supported in this browser");
 		let t = async () => {
 			try {
-				let t = await z();
+				let t = await Z();
 				t.length && e && e(t);
 			} catch {}
-			E = requestAnimationFrame(t);
+			j = requestAnimationFrame(t);
 		};
 		t();
-	}, V = () => {
-		E !== null && (cancelAnimationFrame(E), E = null);
-	}, H = () => {
-		V(), d.value?.getTracks().forEach((e) => e.stop()), l.value && (l.value.srcObject = null), w &&= (URL.revokeObjectURL(w), null), D && navigator.mediaDevices?.removeEventListener && (navigator.mediaDevices.removeEventListener("devicechange", k), D = !1), d.value = null, l.value = null, f.value = !1, v.value = !1, y.value = !1, b.value = null, x.value = !1;
+	}, Q = () => {
+		j !== null && (cancelAnimationFrame(j), j = null);
+	}, $ = () => {
+		if (Q(), P && P.state !== "inactive") try {
+			P.stop();
+		} catch {}
+		P = null, D.value = !1, N = null, m.value?.getTracks().forEach((e) => e.stop()), f.value && (f.value.srcObject = null), o.videoRef?.value && (o.videoRef.value.srcObject = null), k &&= (URL.revokeObjectURL(k), null), M && navigator.mediaDevices?.removeEventListener && (navigator.mediaDevices.removeEventListener("devicechange", R), M = !1), m.value = null, f.value = null, h.value = !1, x.value = !1, S.value = !1, C.value = null, w.value = !1;
 	};
-	return o && e() && t(H), {
-		videoForScreenShot: l,
-		screenshotVideoBlob: u,
-		videoStream: d,
-		isSupported: s,
-		isActive: f,
-		error: p,
-		permission: m,
-		setUpVideoForScreenshot: j,
-		capturePhoto: N,
-		stop: H,
-		devices: h,
-		currentDeviceId: g,
-		isFrontCamera: _,
-		refreshDevices: A,
-		switchCamera: M,
-		toObjectURL: P,
-		toDataURL: F,
-		toFile: I,
-		canTorch: v,
-		canZoom: y,
-		zoomRange: b,
-		torchOn: x,
-		zoom: S,
-		setTorch: L,
-		setZoom: R,
-		isBarcodeSupported: c,
-		detectedCodes: C,
-		scan: z,
-		startScanning: B,
-		stopScanning: V
+	return s && e() && t($), {
+		videoForScreenShot: f,
+		screenshotVideoBlob: p,
+		videoStream: m,
+		isSupported: c,
+		isActive: h,
+		error: g,
+		permission: _,
+		setUpVideoForScreenshot: B,
+		capturePhoto: H,
+		stop: $,
+		isImageCaptureSupported: u,
+		takePhoto: W,
+		grabFrame: G,
+		devices: v,
+		currentDeviceId: y,
+		isFrontCamera: b,
+		refreshDevices: z,
+		switchCamera: V,
+		toObjectURL: K,
+		toDataURL: q,
+		toFile: J,
+		canTorch: x,
+		canZoom: S,
+		zoomRange: C,
+		torchOn: w,
+		zoom: T,
+		setTorch: Y,
+		setZoom: X,
+		isRecordingSupported: d,
+		isRecording: D,
+		recordedBlob: O,
+		startRecording: ee,
+		stopRecording: te,
+		pauseRecording: ne,
+		resumeRecording: re,
+		isBarcodeSupported: l,
+		detectedCodes: E,
+		scan: Z,
+		startScanning: ie,
+		stopScanning: Q
 	};
 }
 //#endregion
-export { a as usePhotoCapture };
+export { o as usePhotoCapture };
