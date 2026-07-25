@@ -29,4 +29,4 @@ jobs:
           pr-number: ${{ github.event.inputs.pr || github.event.pull_request.number }}
           model: o4-mini
           version: latest
-          exclude: tsconfig.json
+          exclude: 'tsconfig.json,*.md,dist/**'
