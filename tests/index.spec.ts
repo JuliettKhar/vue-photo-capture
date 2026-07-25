@@ -1,4 +1,14 @@
+import {ref, nextTick} from 'vue';
 import {usePhotoCapture} from '../src';
+
+// A minimal MediaStream-like object good enough for setUp/stop/recording.
+const makeCameraStream = () => ({
+    getVideoTracks: () => [{
+        getSettings: () => ({width: 1280, height: 720}),
+        stop: jest.fn(),
+    }],
+    getTracks: () => [{stop: jest.fn()}],
+});
 
 describe('usePhotoCapture', () => {
     beforeEach(() => {
@@ -39,6 +49,7 @@ describe('usePhotoCapture', () => {
 
         expect(global.navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
             video: expect.any(Object),
+            audio: false,
         });
 
         expect(videoForScreenShot.value).not.toBeNull();
@@ -218,7 +229,7 @@ describe('usePhotoCapture', () => {
 
             await switchCamera();
 
-            expect(gum).toHaveBeenLastCalledWith({video: {facingMode: 'environment'}});
+            expect(gum).toHaveBeenLastCalledWith({video: {facingMode: 'environment'}, audio: false});
             expect(isFrontCamera.value).toBe(false);
         });
     });
@@ -262,6 +273,131 @@ describe('usePhotoCapture', () => {
             const {scan, isBarcodeSupported} = usePhotoCapture();
             expect(isBarcodeSupported).toBe(false);
             await expect(scan()).rejects.toThrow('BarcodeDetector is not supported');
+        });
+    });
+
+    describe('videoRef auto-binding', () => {
+        it('binds the stream to the provided <video> ref', async () => {
+            const videoEl = document.createElement('video');
+            videoEl.play = jest.fn().mockResolvedValue(undefined) as any;
+            const videoRef = ref<HTMLVideoElement | null>(videoEl);
+
+            const stream = makeCameraStream();
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(stream as any);
+
+            const {setUpVideoForScreenshot} = usePhotoCapture({videoRef});
+            await setUpVideoForScreenshot();
+            await nextTick();
+
+            expect(videoEl.srcObject).toBe(stream);
+            expect(videoEl.play).toHaveBeenCalled();
+        });
+    });
+
+    describe('ImageCapture (full-resolution stills)', () => {
+        it('takePhoto uses ImageCapture and updates the blob', async () => {
+            const photoBlob = new Blob(['img'], {type: 'image/jpeg'});
+            const takePhotoMock = jest.fn().mockResolvedValue(photoBlob);
+            const orig = (window as any).ImageCapture;
+            (window as any).ImageCapture = jest.fn().mockImplementation(() => ({
+                takePhoto: takePhotoMock,
+                grabFrame: jest.fn(),
+            }));
+            try {
+                jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                    .mockResolvedValue(makeCameraStream() as any);
+
+                const {setUpVideoForScreenshot, takePhoto, screenshotVideoBlob, isImageCaptureSupported} =
+                    usePhotoCapture();
+                expect(isImageCaptureSupported).toBe(true);
+
+                await setUpVideoForScreenshot();
+                const blob = await takePhoto();
+
+                expect(takePhotoMock).toHaveBeenCalled();
+                expect(blob).toBe(photoBlob);
+                expect(screenshotVideoBlob.value).toBe(photoBlob);
+            } finally {
+                delete (window as any).ImageCapture;
+                if (orig !== undefined) (window as any).ImageCapture = orig;
+            }
+        });
+
+        it('takePhoto falls back to canvas capture when ImageCapture is unsupported', async () => {
+            const mockBlob = new Blob();
+            const mockCanvas = {
+                width: 0,
+                height: 0,
+                getContext: jest.fn().mockReturnValue({drawImage: jest.fn(), translate: jest.fn(), scale: jest.fn()}),
+                toBlob: jest.fn((cb) => cb(mockBlob)),
+            };
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (mockCanvas as any) : realCreateElement(tag),
+            );
+
+            const videoRef = ref<any>({width: 0, height: 0, videoWidth: 640, videoHeight: 480});
+            const {takePhoto, isImageCaptureSupported} = usePhotoCapture({videoRef});
+
+            expect(isImageCaptureSupported).toBe(false);
+            await expect(takePhoto()).resolves.toBe(mockBlob);
+            expect(mockCanvas.width).toBe(640);
+        });
+    });
+
+    describe('video recording', () => {
+        class FakeRecorder {
+            state = 'inactive';
+            mimeType = 'video/webm';
+            ondataavailable: ((e: any) => void) | null = null;
+            onstop: (() => void) | null = null;
+            constructor(public stream: any, public opts: any) {}
+            start() { this.state = 'recording'; }
+            stop() {
+                this.state = 'inactive';
+                this.ondataavailable?.({data: new Blob(['chunk'], {type: 'video/webm'})});
+                this.onstop?.();
+            }
+            pause() { this.state = 'paused'; }
+            resume() { this.state = 'recording'; }
+            static isTypeSupported() { return true; }
+        }
+
+        it('records and resolves with a blob', async () => {
+            const orig = (window as any).MediaRecorder;
+            (window as any).MediaRecorder = FakeRecorder as any;
+            try {
+                jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                    .mockResolvedValue(makeCameraStream() as any);
+
+                const {setUpVideoForScreenshot, startRecording, stopRecording, isRecording, recordedBlob, isRecordingSupported} =
+                    usePhotoCapture();
+                expect(isRecordingSupported).toBe(true);
+
+                await setUpVideoForScreenshot();
+                startRecording();
+                expect(isRecording.value).toBe(true);
+
+                const blob = await stopRecording();
+                expect(blob).toBeInstanceOf(Blob);
+                expect(recordedBlob.value).toBe(blob);
+                expect(isRecording.value).toBe(false);
+            } finally {
+                delete (window as any).MediaRecorder;
+                if (orig !== undefined) (window as any).MediaRecorder = orig;
+            }
+        });
+
+        it('startRecording throws when the camera is not active', () => {
+            const orig = (window as any).MediaRecorder;
+            (window as any).MediaRecorder = FakeRecorder as any;
+            try {
+                const {startRecording} = usePhotoCapture();
+                expect(() => startRecording()).toThrow('Camera is not active');
+            } finally {
+                delete (window as any).MediaRecorder;
+                if (orig !== undefined) (window as any).MediaRecorder = orig;
+            }
         });
     });
 });

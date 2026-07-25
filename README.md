@@ -1,5 +1,5 @@
 # Vue Photo Capture
-A Vue 3 Composition API library for capturing photos from a webcam or camera device. It manages the video stream lifecycle, captures frames as `Blob`s, switches cameras, controls torch/zoom and can scan QR/barcodes — with reactive state and automatic cleanup.
+A Vue 3 Composition API library for capturing photos and video from a webcam or camera device. It manages the stream lifecycle, captures full-resolution stills, records clips, switches cameras, controls torch/zoom and can scan QR/barcodes — with reactive state and automatic cleanup.
 
 [//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
@@ -15,6 +15,9 @@ A Vue 3 Composition API library for capturing photos from a webcam or camera dev
 
 - **Stream lifecycle** — start/stop the camera with real cleanup (tracks are stopped, no leaked camera light).
 - **Photo capture** — capture the current frame as a `Blob`, with mime type / quality / mirror options.
+- **Full-resolution stills** — native `ImageCapture.takePhoto()` / `grabFrame()`, with a canvas fallback.
+- **Video recording** — record clips via `MediaRecorder` (optional audio, pause/resume).
+- **Auto-bound `<video>`** — pass a template ref and the stream binds itself (no manual `srcObject`).
 - **Output helpers** — `toObjectURL` (auto-revoking), `toDataURL`, `toFile` — no manual memory management.
 - **Camera switching** — list `devices`, switch by `deviceId`, or flip front/back.
 - **Hardware controls** — torch/flashlight and zoom via `applyConstraints` (where supported).
@@ -28,6 +31,9 @@ npm install vue-photo-capture
 > `vue@^3` is a peer dependency — the library uses the Vue already installed in your app.
 
 ## Usage
+
+Pass a template ref via `videoRef` and the stream binds to it automatically — no manual `srcObject`:
+
 ```vue
 <script setup>
 import { onMounted, ref } from 'vue';
@@ -37,33 +43,36 @@ const video = ref(null);
 const preview = ref('');
 
 const {
-  videoStream,
   setUpVideoForScreenshot,
-  capturePhoto,
+  takePhoto,
   toObjectURL,
   error,
-} = usePhotoCapture();
+} = usePhotoCapture({ videoRef: video });
 
-onMounted(async () => {
-  await setUpVideoForScreenshot();
-  video.value.srcObject = videoStream.value;
-});
+onMounted(setUpVideoForScreenshot);
 
-async function takePhoto() {
-  await capturePhoto(video.value);
-  preview.value = toObjectURL(); // auto-revokes the previous URL
+async function capture() {
+  await takePhoto();              // full-res via ImageCapture, canvas fallback
+  preview.value = toObjectURL();  // auto-revokes the previous URL
 }
 </script>
 
 <template>
-  <video ref="video" playsinline autoplay></video>
-  <button @click="takePhoto">Capture Photo</button>
+  <video ref="video" playsinline autoplay muted></video>
+  <button @click="capture">Capture Photo</button>
   <img v-if="preview" :src="preview" alt="photo" />
   <p v-if="error">{{ error.message }}</p>
 </template>
 ```
 
 The composable **automatically stops all tracks on unmount** (disable via `usePhotoCapture({ autoCleanup: false })` and call `stop()` yourself).
+
+### Options
+| Option | Type | Description |
+|---|---|---|
+| `videoRef` | `Ref<HTMLVideoElement \| null>` | Auto-bind the stream to this element and use it as the default capture source. |
+| `audio` | `boolean` | Also request a microphone track — required to record video **with sound**. Default `false`. |
+| `autoCleanup` | `boolean` | Stop tracks and reset on unmount. Default `true`. |
 
 ## API
 
@@ -87,13 +96,22 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | `torchOn` / `zoom` | `Ref<boolean>` / `Ref<number>` | Current torch/zoom values. |
 | `isBarcodeSupported` | `boolean` | `BarcodeDetector` availability. |
 | `detectedCodes` | `Ref<DetectedBarcode[]>` | Codes from the last scan. |
+| `isImageCaptureSupported` | `boolean` | Native `ImageCapture` availability. |
+| `isRecordingSupported` | `boolean` | `MediaRecorder` availability. |
+| `isRecording` | `Ref<boolean>` | Whether a recording is in progress. |
+| `recordedBlob` | `Ref<Blob \| null>` | The last recorded clip. |
 
 ### Methods
 | Method | Description |
 |---|---|
 | `setUpVideoForScreenshot(constraints?)` | Request the camera and start the stream. |
-| `capturePhoto(video?, { type?, quality?, mirror? })` | Capture a frame → `Promise<Blob>`. |
-| `stop()` | Stop all tracks and reset state. |
+| `capturePhoto(video?, { type?, quality?, mirror? })` | Capture a canvas frame → `Promise<Blob>`. |
+| `takePhoto({ type?, quality?, mirror? })` | Full-res `ImageCapture` still, canvas fallback → `Promise<Blob>`. |
+| `grabFrame()` | Grab the current frame as an `ImageBitmap` → `Promise<ImageBitmap>`. |
+| `startRecording({ mimeType?, timeslice?, ... })` | Start recording the stream. |
+| `stopRecording()` | Stop recording → `Promise<Blob>`. |
+| `pauseRecording()` / `resumeRecording()` | Pause/resume an in-progress recording. |
+| `stop()` | Stop all tracks, recording and reset state. |
 | `refreshDevices()` | Re-enumerate video devices. |
 | `switchCamera(deviceId?)` | Switch to a device, or flip front/back with no argument. |
 | `toObjectURL(blob?)` | `blob:` URL for `<img>`, auto-revoking the previous one. |
@@ -144,6 +162,18 @@ const { isBarcodeSupported, startScanning, stopScanning } = usePhotoCapture();
 if (isBarcodeSupported) {
   startScanning((codes) => console.log(codes[0].rawValue));
 }
+```
+
+### Record a video clip
+```js
+// request audio up-front so the recording has sound
+const { setUpVideoForScreenshot, startRecording, stopRecording, isRecording } =
+  usePhotoCapture({ videoRef: video, audio: true });
+
+await setUpVideoForScreenshot();
+startRecording();               // ... later ...
+const clip = await stopRecording(); // Blob (video/webm)
+const url = URL.createObjectURL(clip);
 ```
 
 ### Upload the photo

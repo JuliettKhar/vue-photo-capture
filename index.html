@@ -5,18 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Vue Photo Capture Demo</title>
     <style>
-        :root { --accent: #4CAF50; --bg: #f6f7f9; --card: #fff; --border: #e2e5e9; }
+        :root { --accent: #4CAF50; --bg: #f6f7f9; --card: #fff; --border: #e2e5e9; --rec: #d93025; }
         * { box-sizing: border-box; }
         body { font-family: system-ui, Arial, sans-serif; background: var(--bg); margin: 0; color: #1c1e21; }
         .app { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
         h1 { text-align: center; }
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .stage { position: relative; width: 100%; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 4 / 3; }
-        video { width: 100%; height: 100%; object-fit: cover; display: block; }
-        video.mirrored { transform: scaleX(-1); }
+        .stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .stage video.mirrored { transform: scaleX(-1); }
+        .rec-dot { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
+                   background: rgba(0,0,0,.55); color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
+        .rec-dot::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); animation: blink 1s steps(2) infinite; }
+        @keyframes blink { 50% { opacity: .2; } }
         .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
         button { padding: 9px 16px; font-size: 15px; cursor: pointer; background: var(--accent); color: #fff; border: none; border-radius: 8px; }
         button.secondary { background: #eceef1; color: #1c1e21; }
+        button.rec { background: var(--rec); }
         button:disabled { opacity: .45; cursor: not-allowed; }
         select, input[type=range] { padding: 6px; }
         label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
@@ -25,7 +30,7 @@
         .badge.on { background: #e6f4ea; border-color: #b7e1c3; color: #1e7a34; }
         .badge.off { background: #fdecea; border-color: #f5c6c2; color: #b3261e; }
         .badge.neutral { background: #eef1f4; }
-        .preview img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+        .preview img, .clip video { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); }
         .muted { color: #65686c; font-size: 14px; }
         .error { color: #b3261e; }
         code { background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
@@ -63,22 +68,25 @@
                 <span class="badge" :class="isFrontCamera ? 'on' : 'neutral'">{{ isFrontCamera ? 'front' : 'back' }} camera</span>
                 <span class="badge" :class="canTorch ? 'on' : 'off'">torch</span>
                 <span class="badge" :class="canZoom ? 'on' : 'off'">zoom</span>
+                <span class="badge" :class="isImageCaptureSupported ? 'on' : 'off'">ImageCapture</span>
+                <span class="badge" :class="isRecordingSupported ? 'on' : 'off'">MediaRecorder</span>
                 <span class="badge" :class="isBarcodeSupported ? 'on' : 'off'">BarcodeDetector</span>
             </div>
             <p v-if="error" class="error">⚠️ {{ error.message }}</p>
         </div>
 
-        <!-- Camera stage -->
+        <!-- Camera stage (stream auto-binds via the `videoRef` option) -->
         <div class="card">
             <div class="stage">
                 <video ref="video" :class="{ mirrored: isFrontCamera }" playsinline autoplay muted
                        @loadedmetadata="ready = true" @playing="ready = true"></video>
+                <div class="rec-dot" v-if="isRecording">REC {{ recordSeconds }}s</div>
             </div>
 
             <div class="row">
                 <button v-if="!isActive" @click="start">Start camera</button>
                 <button v-else class="secondary" @click="stop">Stop</button>
-                <button @click="takePhoto" :disabled="!isActive || !ready">
+                <button @click="capture" :disabled="!isActive || !ready">
                     {{ isActive && !ready ? 'Preparing…' : 'Capture photo' }}
                 </button>
                 <button class="secondary" @click="switchCamera()" :disabled="!isActive">Flip front/back</button>
@@ -94,6 +102,22 @@
                         </option>
                     </select>
                 </label>
+            </div>
+        </div>
+
+        <!-- Video recording -->
+        <div class="card">
+            <h3>Video recording</h3>
+            <div class="row">
+                <button v-if="!isRecording" class="rec" @click="record" :disabled="!isActive || !isRecordingSupported">● Record</button>
+                <button v-else class="secondary" @click="stopRecord">■ Stop ({{ recordSeconds }}s)</button>
+                <span v-if="!isRecordingSupported" class="disabled-note">MediaRecorder unavailable in this browser</span>
+            </div>
+            <div class="clip" v-if="clipUrl">
+                <video :src="clipUrl" controls playsinline></video>
+                <div class="row">
+                    <button class="secondary" @click="downloadClip">Download clip</button>
+                </div>
             </div>
         </div>
 
@@ -152,26 +176,32 @@
 
     createApp({
         setup() {
-            const api = usePhotoCapture();
+            const video = ref(null);
+            // videoRef auto-binds the stream to <video>; audio enables recording with sound.
+            const api = usePhotoCapture({ videoRef: video, audio: true });
             const {
-                videoStream, isSupported, isActive, error, permission,
+                isSupported, isActive, error, permission,
                 devices, currentDeviceId, isFrontCamera,
                 canTorch, canZoom, zoomRange, torchOn, zoom,
-                isBarcodeSupported, detectedCodes,
-                setUpVideoForScreenshot, capturePhoto, stop: stopCamera,
+                isImageCaptureSupported, isBarcodeSupported, detectedCodes,
+                isRecordingSupported, isRecording,
+                setUpVideoForScreenshot, takePhoto, stop: stopCamera,
                 switchCamera: switchCam, toObjectURL, toDataURL, toFile,
                 setTorch, setZoom, startScanning, stopScanning,
+                startRecording, stopRecording,
             } = api;
 
-            const video = ref(null);
             const previewCard = ref(null);
             const preview = ref('');
+            const clipUrl = ref('');
             const dataUrlLen = ref(0);
             const scanning = ref(false);
-            const ready = ref(false); // video has decoded a frame and has dimensions
+            const ready = ref(false);           // video has decoded a frame and has dimensions
+            const recordSeconds = ref(0);
             const toast = ref('');
             const justCaptured = ref(false);
             let toastTimer = null;
+            let recordTimer = null;
 
             const showToast = (message) => {
                 toast.value = message;
@@ -179,38 +209,52 @@
                 toastTimer = setTimeout(() => { toast.value = ''; }, 2500);
             };
 
-            const bindStream = async () => {
-                if (!video.value) return;
-                ready.value = false;
-                video.value.srcObject = videoStream.value;
-                try { await video.value.play(); } catch (e) { /* autoplay may need a gesture */ }
-            };
-
             const start = async () => {
-                try {
-                    await setUpVideoForScreenshot();
-                    await bindStream();
-                } catch (e) { /* surfaced via `error` ref */ }
+                ready.value = false;
+                try { await setUpVideoForScreenshot(); } catch (e) { /* surfaced via `error` ref */ }
             };
 
-            const stop = () => { scanning.value = false; ready.value = false; stopCamera(); };
+            const stop = () => { scanning.value = false; ready.value = false; clearInterval(recordTimer); stopCamera(); };
 
             const switchCamera = async (deviceId) => {
                 scanning.value = false;
-                try { await switchCam(deviceId); await bindStream(); }
-                catch (e) { /* surfaced via `error` ref */ }
+                ready.value = false;
+                try { await switchCam(deviceId); } catch (e) { /* surfaced via `error` ref */ }
             };
 
-            const takePhoto = async () => {
+            const capture = async () => {
                 try {
-                    await capturePhoto(video.value, { mirror: isFrontCamera.value });
-                    preview.value = toObjectURL(); // auto-revokes the previous URL
+                    await takePhoto({ mirror: isFrontCamera.value }); // full-res via ImageCapture, canvas fallback
+                    preview.value = toObjectURL();                   // auto-revokes the previous URL
                     showToast('📸 Photo captured!');
                     justCaptured.value = false;
                     await nextTick();
-                    justCaptured.value = true; // retrigger the flash animation
+                    justCaptured.value = true;
                     previewCard.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const record = () => {
+                try {
+                    startRecording();
+                    recordSeconds.value = 0;
+                    recordTimer = setInterval(() => { recordSeconds.value += 1; }, 1000);
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const stopRecord = async () => {
+                clearInterval(recordTimer);
+                try {
+                    const blob = await stopRecording();
+                    if (clipUrl.value) URL.revokeObjectURL(clipUrl.value);
+                    clipUrl.value = URL.createObjectURL(blob);
+                    showToast('🎬 Clip recorded!');
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const downloadClip = () => {
+                const a = document.createElement('a');
+                a.href = clipUrl.value; a.download = 'clip.webm'; a.click();
             };
 
             const toggleTorch = () => setTorch(!torchOn.value).catch(() => {});
@@ -238,15 +282,16 @@
             const reset = () => { preview.value = ''; dataUrlLen.value = 0; };
 
             onMounted(start);
-            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); });
+            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); clearInterval(recordTimer); });
 
             return {
-                video, previewCard, preview, dataUrlLen, scanning, ready, toast, justCaptured,
+                video, previewCard, preview, clipUrl, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
                 isSupported, isActive, error, permission,
                 devices, currentDeviceId, isFrontCamera,
                 canTorch, canZoom, zoomRange, torchOn, zoom,
-                isBarcodeSupported, detectedCodes,
-                start, stop, switchCamera, takePhoto,
+                isImageCaptureSupported, isBarcodeSupported, detectedCodes,
+                isRecordingSupported, isRecording,
+                start, stop, switchCamera, capture, record, stopRecord, downloadClip,
                 toggleTorch, onZoom, toggleScan, download, copyDataUrl, reset,
             };
         },

@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-25
+
+### Added
+- **Full-resolution stills** — `takePhoto()` uses the native `ImageCapture.takePhoto()` for full sensor resolution (with an automatic canvas fallback), plus `grabFrame()` and `isImageCaptureSupported`.
+- **Video recording** — `startRecording()`, `stopRecording()` (→ `Promise<Blob>`), `pauseRecording()`, `resumeRecording()`, with `isRecording`, `recordedBlob`, and `isRecordingSupported` (`MediaRecorder`). Pass `usePhotoCapture({ audio: true })` to record with sound.
+- **Auto-bound video element** — `usePhotoCapture({ videoRef })` binds the stream to your `<video>` automatically (no manual `srcObject`) and uses it as the default capture source.
+
+### Changed
+- `setUpVideoForScreenshot` now requests `{ audio }` per the `audio` option (default `false`, so behavior is unchanged unless opted in).
+- All additions are backward compatible — no changes required when upgrading from 1.1.x.
+
 ## [1.1.0] - 2026-07-24
 
 ### Added
