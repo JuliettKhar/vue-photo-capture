@@ -27,28 +27,46 @@ export declare interface DetectedBarcode {
 export declare interface PhotoCaptureOptions {
     /** Stop tracks and reset state automatically when the host component unmounts. Default: `true`. */
     autoCleanup?: boolean;
+    /**
+     * A template ref to a `<video>` element. When provided, the stream is bound to it
+     * automatically (no manual `srcObject`), and it becomes the default capture source.
+     */
+    videoRef?: Ref<HTMLVideoElement | null | undefined>;
+    /** Also request a microphone track — required to record video with sound. Default: `false`. */
+    audio?: boolean;
+}
+
+export declare interface RecordOptions {
+    /** Recording container/codec, e.g. `'video/webm;codecs=vp9'`. Ignored if unsupported. */
+    mimeType?: string;
+    /** Audio bitrate in bits per second. */
+    audioBitsPerSecond?: number;
+    /** Video bitrate in bits per second. */
+    videoBitsPerSecond?: number;
+    /** Emit chunks every `timeslice` ms instead of only at stop. */
+    timeslice?: number;
 }
 
 export declare type UsePhotoCapture = ReturnType<typeof usePhotoCapture>;
 
 export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly videoForScreenShot: Ref<HTMLVideoElement | null, HTMLVideoElement | null>;
-    readonly screenshotVideoBlob: Ref<    {
-    readonly size: number;
-    readonly type: string;
-    arrayBuffer: () => Promise<ArrayBuffer>;
-    bytes: () => Promise<Uint8Array<ArrayBuffer>>;
-    slice: (start?: number, end?: number, contentType?: string) => Blob;
-    stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
-    text: () => Promise<string>;
+    readonly screenshotVideoBlob: Ref<{
+        readonly size: number;
+        readonly type: string;
+        arrayBuffer: () => Promise<ArrayBuffer>;
+        bytes: () => Promise<Uint8Array<ArrayBuffer>>;
+        slice: (start?: number, end?: number, contentType?: string) => Blob;
+        stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
+        text: () => Promise<string>;
     } | null, Blob | {
-    readonly size: number;
-    readonly type: string;
-    arrayBuffer: () => Promise<ArrayBuffer>;
-    bytes: () => Promise<Uint8Array<ArrayBuffer>>;
-    slice: (start?: number, end?: number, contentType?: string) => Blob;
-    stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
-    text: () => Promise<string>;
+        readonly size: number;
+        readonly type: string;
+        arrayBuffer: () => Promise<ArrayBuffer>;
+        bytes: () => Promise<Uint8Array<ArrayBuffer>>;
+        slice: (start?: number, end?: number, contentType?: string) => Blob;
+        stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
+        text: () => Promise<string>;
     } | null>;
     readonly videoStream: ShallowRef<MediaStream | null, MediaStream | null>;
     readonly isSupported: boolean;
@@ -58,18 +76,21 @@ export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly setUpVideoForScreenshot: (videoOptions?: MediaStreamConstraints["video"]) => Promise<void>;
     readonly capturePhoto: (videoElem?: HTMLVideoElement | null, captureOptions?: CaptureOptions) => Promise<Blob>;
     readonly stop: () => void;
-    readonly devices: Ref<    {
-    readonly deviceId: string;
-    readonly groupId: string;
-    readonly kind: MediaDeviceKind;
-    readonly label: string;
-    toJSON: () => any;
+    readonly isImageCaptureSupported: boolean;
+    readonly takePhoto: (captureOptions?: CaptureOptions) => Promise<Blob>;
+    readonly grabFrame: () => Promise<ImageBitmap>;
+    readonly devices: Ref<{
+        readonly deviceId: string;
+        readonly groupId: string;
+        readonly kind: MediaDeviceKind;
+        readonly label: string;
+        toJSON: () => any;
     }[], MediaDeviceInfo[] | {
-    readonly deviceId: string;
-    readonly groupId: string;
-    readonly kind: MediaDeviceKind;
-    readonly label: string;
-    toJSON: () => any;
+        readonly deviceId: string;
+        readonly groupId: string;
+        readonly kind: MediaDeviceKind;
+        readonly label: string;
+        toJSON: () => any;
     }[]>;
     readonly currentDeviceId: Ref<string | null, string | null>;
     readonly isFrontCamera: Ref<boolean, boolean>;
@@ -80,56 +101,79 @@ export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly toFile: (name?: string, blob?: Blob | null) => File;
     readonly canTorch: Ref<boolean, boolean>;
     readonly canZoom: Ref<boolean, boolean>;
-    readonly zoomRange: Ref<    {
-    min: number;
-    max: number;
-    step: number;
+    readonly zoomRange: Ref<{
+        min: number;
+        max: number;
+        step: number;
     } | null, ZoomRange | {
-    min: number;
-    max: number;
-    step: number;
+        min: number;
+        max: number;
+        step: number;
     } | null>;
     readonly torchOn: Ref<boolean, boolean>;
     readonly zoom: Ref<number, number>;
     readonly setTorch: (on: boolean) => Promise<void>;
     readonly setZoom: (value: number) => Promise<void>;
+    readonly isRecordingSupported: boolean;
+    readonly isRecording: Ref<boolean, boolean>;
+    readonly recordedBlob: Ref<{
+        readonly size: number;
+        readonly type: string;
+        arrayBuffer: () => Promise<ArrayBuffer>;
+        bytes: () => Promise<Uint8Array<ArrayBuffer>>;
+        slice: (start?: number, end?: number, contentType?: string) => Blob;
+        stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
+        text: () => Promise<string>;
+    } | null, Blob | {
+        readonly size: number;
+        readonly type: string;
+        arrayBuffer: () => Promise<ArrayBuffer>;
+        bytes: () => Promise<Uint8Array<ArrayBuffer>>;
+        slice: (start?: number, end?: number, contentType?: string) => Blob;
+        stream: () => ReadableStream<Uint8Array<ArrayBuffer>>;
+        text: () => Promise<string>;
+    } | null>;
+    readonly startRecording: (recordOptions?: RecordOptions) => void;
+    readonly stopRecording: () => Promise<Blob>;
+    readonly pauseRecording: () => void;
+    readonly resumeRecording: () => void;
     readonly isBarcodeSupported: boolean;
-    readonly detectedCodes: Ref<    {
-    rawValue: string;
-    format: string;
-    boundingBox: {
-    readonly bottom: number;
-    readonly height: number;
-    readonly left: number;
-    readonly right: number;
-    readonly top: number;
-    readonly width: number;
-    readonly x: number;
-    readonly y: number;
-    toJSON: () => any;
-    };
-    cornerPoints: {
-    x: number;
-    y: number;
-    }[];
+    readonly detectedCodes: Ref<{
+        rawValue: string;
+        format: string;
+        boundingBox: {
+            readonly bottom: number;
+            readonly height: number;
+            readonly left: number;
+            readonly right: number;
+            readonly top: number;
+            readonly width: number;
+            readonly x: number;
+            readonly y: number;
+            toJSON: () => any;
+        };
+        cornerPoints: {
+            x: number;
+            y: number;
+        }[];
     }[], DetectedBarcode[] | {
-    rawValue: string;
-    format: string;
-    boundingBox: {
-    readonly bottom: number;
-    readonly height: number;
-    readonly left: number;
-    readonly right: number;
-    readonly top: number;
-    readonly width: number;
-    readonly x: number;
-    readonly y: number;
-    toJSON: () => any;
-    };
-    cornerPoints: {
-    x: number;
-    y: number;
-    }[];
+        rawValue: string;
+        format: string;
+        boundingBox: {
+            readonly bottom: number;
+            readonly height: number;
+            readonly left: number;
+            readonly right: number;
+            readonly top: number;
+            readonly width: number;
+            readonly x: number;
+            readonly y: number;
+            toJSON: () => any;
+        };
+        cornerPoints: {
+            x: number;
+            y: number;
+        }[];
     }[]>;
     readonly scan: (source?: CanvasImageSource | null) => Promise<DetectedBarcode[]>;
     readonly startScanning: (onDetect?: (codes: DetectedBarcode[]) => void) => void;

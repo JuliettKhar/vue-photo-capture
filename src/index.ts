@@ -1,4 +1,4 @@
-import { ref, shallowRef, onUnmounted, getCurrentInstance } from 'vue';
+import { ref, shallowRef, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue';
 
 /** Reactive permission state for the camera. */
 export type CameraPermission = 'prompt' | 'granted' | 'denied' | 'unknown';
@@ -21,6 +21,13 @@ export interface DetectedBarcode {
 export interface PhotoCaptureOptions {
     /** Stop tracks and reset state automatically when the host component unmounts. Default: `true`. */
     autoCleanup?: boolean;
+    /**
+     * A template ref to a `<video>` element. When provided, the stream is bound to it
+     * automatically (no manual `srcObject`), and it becomes the default capture source.
+     */
+    videoRef?: Ref<HTMLVideoElement | null | undefined>;
+    /** Also request a microphone track — required to record video with sound. Default: `false`. */
+    audio?: boolean;
 }
 
 export interface CaptureOptions {
@@ -30,6 +37,17 @@ export interface CaptureOptions {
     quality?: number;
     /** Mirror the frame horizontally (useful for the front/selfie camera). */
     mirror?: boolean;
+}
+
+export interface RecordOptions {
+    /** Recording container/codec, e.g. `'video/webm;codecs=vp9'`. Ignored if unsupported. */
+    mimeType?: string;
+    /** Audio bitrate in bits per second. */
+    audioBitsPerSecond?: number;
+    /** Video bitrate in bits per second. */
+    videoBitsPerSecond?: number;
+    /** Emit chunks every `timeslice` ms instead of only at stop. */
+    timeslice?: number;
 }
 
 const DEFAULT_CONSTRAINTS = {
@@ -47,6 +65,10 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
     const isBarcodeSupported =
         typeof window !== 'undefined' && 'BarcodeDetector' in window;
+    const isImageCaptureSupported =
+        typeof window !== 'undefined' && 'ImageCapture' in window;
+    const isRecordingSupported =
+        typeof window !== 'undefined' && 'MediaRecorder' in window;
 
     // --- core reactive state -------------------------------------------------
     const videoForScreenShot = ref<HTMLVideoElement | null>(null);
@@ -71,13 +93,24 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
     // --- barcode scanning ----------------------------------------------------
     const detectedCodes = ref<DetectedBarcode[]>([]);
 
+    // --- recording -----------------------------------------------------------
+    const isRecording = ref(false);
+    const recordedBlob = ref<Blob | null>(null);
+
     let objectUrl: string | null = null;
     let barcodeDetector: { detect: (source: CanvasImageSource) => Promise<DetectedBarcode[]> } | null = null;
     let scanFrame: number | null = null;
     let deviceListenerAttached = false;
+    let imageCapture: { takePhoto: () => Promise<Blob>; grabFrame: () => Promise<ImageBitmap> } | null = null;
+    let mediaRecorder: MediaRecorder | null = null;
+    let recordedChunks: Blob[] = [];
 
     const activeTrack = (): MediaStreamTrack | null =>
         videoStream.value?.getVideoTracks()[0] ?? null;
+
+    /** The element streams are bound to and captured from: the user-provided ref, else the internal one. */
+    const targetVideo = (): HTMLVideoElement | null =>
+        options.videoRef?.value ?? videoForScreenShot.value;
 
     const handleDeviceChange = () => {
         void refreshDevices();
@@ -91,6 +124,23 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         return devices.value;
     };
 
+    // Bind the active stream to the user-provided <video> ref whenever either changes.
+    const attachToVideoRef = async () => {
+        const el = options.videoRef?.value;
+        if (!el) return;
+        if (el.srcObject !== videoStream.value) el.srcObject = videoStream.value;
+        if (videoStream.value) {
+            try {
+                await el.play();
+            } catch {
+                /* autoplay may require a user gesture — ignore */
+            }
+        }
+    };
+    if (options.videoRef) {
+        watch([videoStream, options.videoRef], attachToVideoRef, { flush: 'post' });
+    }
+
     const setUpVideoForScreenshot = async (
         videoOptions: MediaStreamConstraints['video'] = DEFAULT_CONSTRAINTS,
     ): Promise<void> => {
@@ -103,7 +153,10 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: videoOptions });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: videoOptions,
+                audio: options.audio ?? false,
+            });
             const track = stream.getVideoTracks()[0];
             const settings = track.getSettings();
 
@@ -118,6 +171,7 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             videoStream.value = stream;
             isActive.value = true;
             permission.value = 'granted';
+            imageCapture = null; // recreated lazily for the new track
 
             // hardware capabilities & current device
             currentDeviceId.value = settings.deviceId ?? null;
@@ -166,7 +220,7 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
     };
 
     const capturePhoto = (
-        videoElem: HTMLVideoElement | null = videoForScreenShot.value,
+        videoElem: HTMLVideoElement | null = targetVideo(),
         captureOptions: CaptureOptions = {},
     ): Promise<Blob> =>
         new Promise((resolve, reject) => {
@@ -220,6 +274,46 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             );
         });
 
+    // --- ImageCapture (full-resolution stills) -------------------------------
+
+    const getImageCapture = () => {
+        const track = activeTrack();
+        if (!track) throw new Error('Camera is not active');
+        imageCapture ??= new (window as unknown as {
+            ImageCapture: new (t: MediaStreamTrack) => {
+                takePhoto: () => Promise<Blob>;
+                grabFrame: () => Promise<ImageBitmap>;
+            };
+        }).ImageCapture(track);
+        return imageCapture;
+    };
+
+    /**
+     * Capture a still. Uses the native `ImageCapture.takePhoto()` for full sensor
+     * resolution where available, and falls back to a canvas frame grab otherwise.
+     * Updates `screenshotVideoBlob`.
+     */
+    const takePhoto = async (captureOptions: CaptureOptions = {}): Promise<Blob> => {
+        if (isImageCaptureSupported && activeTrack()) {
+            try {
+                const blob: Blob = await getImageCapture().takePhoto();
+                screenshotVideoBlob.value = blob;
+                return blob;
+            } catch {
+                /* some devices reject takePhoto — fall back to canvas below */
+            }
+        }
+        return capturePhoto(targetVideo(), captureOptions);
+    };
+
+    /** Grab the current frame as an `ImageBitmap` via `ImageCapture` (no canvas). */
+    const grabFrame = async (): Promise<ImageBitmap> => {
+        if (!isImageCaptureSupported) {
+            throw new Error('ImageCapture is not supported in this browser');
+        }
+        return getImageCapture().grabFrame();
+    };
+
     // --- output helpers ------------------------------------------------------
 
     /** Create a `blob:` object URL for the captured photo, auto-revoking the previous one. */
@@ -269,11 +363,68 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         zoom.value = value;
     };
 
+    // --- video recording -----------------------------------------------------
+
+    /** Start recording the live stream (include audio via `usePhotoCapture({ audio: true })`). */
+    const startRecording = (recordOptions: RecordOptions = {}): void => {
+        if (!isRecordingSupported) {
+            throw new Error('MediaRecorder is not supported in this browser');
+        }
+        if (!videoStream.value) throw new Error('Camera is not active');
+        if (isRecording.value) return;
+
+        const mimeType =
+            recordOptions.mimeType && MediaRecorder.isTypeSupported(recordOptions.mimeType)
+                ? recordOptions.mimeType
+                : undefined;
+        recordedChunks = [];
+        const recorder = new MediaRecorder(videoStream.value, {
+            ...(mimeType ? { mimeType } : {}),
+            ...(recordOptions.audioBitsPerSecond ? { audioBitsPerSecond: recordOptions.audioBitsPerSecond } : {}),
+            ...(recordOptions.videoBitsPerSecond ? { videoBitsPerSecond: recordOptions.videoBitsPerSecond } : {}),
+        });
+        recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder = recorder;
+        recorder.start(recordOptions.timeslice);
+        isRecording.value = true;
+    };
+
+    /** Stop recording and resolve with the recorded `Blob`. Also updates `recordedBlob`. */
+    const stopRecording = (): Promise<Blob> =>
+        new Promise((resolve, reject) => {
+            const recorder = mediaRecorder;
+            if (!recorder || recorder.state === 'inactive') {
+                reject(new Error('Not recording'));
+                return;
+            }
+            recorder.onstop = () => {
+                const type = recorder.mimeType || recordedChunks[0]?.type || 'video/webm';
+                const blob = new Blob(recordedChunks, { type });
+                recordedBlob.value = blob;
+                isRecording.value = false;
+                mediaRecorder = null;
+                resolve(blob);
+            };
+            recorder.stop();
+        });
+
+    /** Pause an in-progress recording. */
+    const pauseRecording = (): void => {
+        if (mediaRecorder?.state === 'recording') mediaRecorder.pause();
+    };
+
+    /** Resume a paused recording. */
+    const resumeRecording = (): void => {
+        if (mediaRecorder?.state === 'paused') mediaRecorder.resume();
+    };
+
     // --- barcode / QR scanning ----------------------------------------------
 
     /** Detect barcodes/QR codes in a single frame. Updates `detectedCodes`. */
     const scan = async (
-        source: CanvasImageSource | null = videoForScreenShot.value,
+        source: CanvasImageSource | null = targetVideo(),
     ): Promise<DetectedBarcode[]> => {
         if (!isBarcodeSupported) {
             throw new Error('BarcodeDetector is not supported in this browser');
@@ -316,9 +467,22 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
 
     const stop = (): void => {
         stopScanning();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            try {
+                mediaRecorder.stop();
+            } catch {
+                /* already stopped */
+            }
+        }
+        mediaRecorder = null;
+        isRecording.value = false;
+        imageCapture = null;
         videoStream.value?.getTracks().forEach((track) => track.stop());
         if (videoForScreenShot.value) {
             videoForScreenShot.value.srcObject = null;
+        }
+        if (options.videoRef?.value) {
+            options.videoRef.value.srcObject = null;
         }
         if (objectUrl) {
             URL.revokeObjectURL(objectUrl);
@@ -356,6 +520,10 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         setUpVideoForScreenshot,
         capturePhoto,
         stop,
+        // full-resolution stills
+        isImageCaptureSupported,
+        takePhoto,
+        grabFrame,
         // devices
         devices,
         currentDeviceId,
@@ -374,6 +542,14 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         zoom,
         setTorch,
         setZoom,
+        // video recording
+        isRecordingSupported,
+        isRecording,
+        recordedBlob,
+        startRecording,
+        stopRecording,
+        pauseRecording,
+        resumeRecording,
         // barcode scanning
         isBarcodeSupported,
         detectedCodes,
