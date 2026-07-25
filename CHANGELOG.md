@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-26
+
+### Added
+- **Stream info** — reactive `resolution` (`{ width, height }`) and `aspectRatio`, plus a `mirrorStyle` computed style that mirrors the preview for the front camera.
+
+### Changed
+- **`OverconstrainedError` fallback** — `setUpVideoForScreenshot` now retries once with relaxed constraints when the requested ones can't be satisfied, instead of throwing.
+
+### Tests
+- Added a mounted-component `onUnmounted` test (real cleanup path), and removed a hidden ordering dependency on `navigator.mediaDevices`.
+
 ## [1.2.0] - 2026-07-25
 
 ### Added

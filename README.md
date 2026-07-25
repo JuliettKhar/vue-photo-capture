@@ -96,6 +96,9 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | `torchOn` / `zoom` | `Ref<boolean>` / `Ref<number>` | Current torch/zoom values. |
 | `isBarcodeSupported` | `boolean` | `BarcodeDetector` availability. |
 | `detectedCodes` | `Ref<DetectedBarcode[]>` | Codes from the last scan. |
+| `resolution` | `Ref<{ width, height } \| null>` | Actual stream resolution. |
+| `aspectRatio` | `Ref<number \| null>` | Actual stream aspect ratio. |
+| `mirrorStyle` | `ComputedRef<{ transform }>` | Inline style that mirrors the preview for the front camera. |
 | `isImageCaptureSupported` | `boolean` | Native `ImageCapture` availability. |
 | `isRecordingSupported` | `boolean` | `MediaRecorder` availability. |
 | `isRecording` | `Ref<boolean>` | Whether a recording is in progress. |
@@ -187,6 +190,9 @@ await fetch('/upload', { method: 'POST', body: form });
 
 > **Browser support:** `torch`, `zoom` and `BarcodeDetector` are progressive enhancements —
 > mainly Chromium/Android. Always gate them behind `canTorch` / `canZoom` / `isBarcodeSupported`.
+
+> **Resilience:** if the requested constraints can't be satisfied, `setUpVideoForScreenshot`
+> automatically retries once with relaxed constraints instead of throwing `OverconstrainedError`.
 
 ## Demo
 [Live demo](https://juliettkhar.github.io/vue-photo-capture/) · source in [`index.html`](./index.html).

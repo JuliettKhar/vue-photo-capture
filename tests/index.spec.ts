@@ -1,4 +1,5 @@
-import {ref, nextTick} from 'vue';
+import {ref, nextTick, defineComponent, h} from 'vue';
+import {mount} from '@vue/test-utils';
 import {usePhotoCapture} from '../src';
 
 // A minimal MediaStream-like object good enough for setUp/stop/recording.
@@ -13,6 +14,17 @@ const makeCameraStream = () => ({
 describe('usePhotoCapture', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        // Ensure a mediaDevices object exists so tests can spy on it regardless of order.
+        if (!navigator.mediaDevices) {
+            Object.defineProperty(navigator, 'mediaDevices', {
+                configurable: true,
+                writable: true,
+                value: {
+                    getUserMedia: jest.fn(),
+                    enumerateDevices: jest.fn().mockResolvedValue([]),
+                },
+            });
+        }
     });
 
     afterEach(() => {
@@ -273,6 +285,86 @@ describe('usePhotoCapture', () => {
             const {scan, isBarcodeSupported} = usePhotoCapture();
             expect(isBarcodeSupported).toBe(false);
             await expect(scan()).rejects.toThrow('BarcodeDetector is not supported');
+        });
+    });
+
+    describe('stream info', () => {
+        it('exposes resolution, aspectRatio and mirrorStyle', async () => {
+            const stream = {
+                getVideoTracks: () => [{
+                    getSettings: () => ({width: 1280, height: 720, facingMode: 'user'}),
+                    stop: jest.fn(),
+                }],
+                getTracks: () => [{stop: jest.fn()}],
+            };
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(stream as any);
+
+            const {setUpVideoForScreenshot, resolution, aspectRatio, mirrorStyle, isFrontCamera} =
+                usePhotoCapture();
+
+            await setUpVideoForScreenshot({facingMode: 'user'});
+
+            expect(resolution.value).toEqual({width: 1280, height: 720});
+            expect(aspectRatio.value).toBeCloseTo(1280 / 720);
+            expect(isFrontCamera.value).toBe(true);
+            expect(mirrorStyle.value).toEqual({transform: 'scaleX(-1)'});
+        });
+    });
+
+    describe('OverconstrainedError fallback', () => {
+        it('retries with relaxed constraints when the requested ones are unsupported', async () => {
+            const overconstrained = Object.assign(new Error('constraints'), {name: 'OverconstrainedError'});
+            const gum = jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                .mockRejectedValueOnce(overconstrained)
+                .mockResolvedValueOnce(makeCameraStream() as any);
+
+            const {setUpVideoForScreenshot, isActive, error} = usePhotoCapture();
+
+            await setUpVideoForScreenshot({width: {exact: 4000}});
+
+            expect(gum).toHaveBeenCalledTimes(2);
+            expect(gum).toHaveBeenLastCalledWith({video: true, audio: false});
+            expect(isActive.value).toBe(true);
+            expect(error.value).toBeNull();
+        });
+
+        it('rethrows non-OverconstrainedError errors without retrying', async () => {
+            const notAllowed = Object.assign(new Error('denied'), {name: 'NotAllowedError'});
+            const gum = jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                .mockRejectedValue(notAllowed);
+
+            const {setUpVideoForScreenshot} = usePhotoCapture();
+
+            await expect(setUpVideoForScreenshot()).rejects.toThrow('denied');
+            expect(gum).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('lifecycle cleanup', () => {
+        it('stops tracks when the host component unmounts', async () => {
+            const track = {stop: jest.fn()};
+            const stream = {
+                getVideoTracks: () => [{getSettings: () => ({width: 1280, height: 720}), stop: jest.fn()}],
+                getTracks: () => [track],
+            };
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(stream as any);
+
+            let api: ReturnType<typeof usePhotoCapture> | undefined;
+            const Comp = defineComponent({
+                setup() {
+                    api = usePhotoCapture();
+                    return () => h('div');
+                },
+            });
+
+            const wrapper = mount(Comp);
+            await api!.setUpVideoForScreenshot();
+            expect(api!.isActive.value).toBe(true);
+
+            wrapper.unmount();
+
+            expect(track.stop).toHaveBeenCalledTimes(1);
+            expect(api!.isActive.value).toBe(false);
         });
     });
 
