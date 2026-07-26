@@ -3,7 +3,7 @@ A Vue 3 Composition API library for capturing photos and video from a webcam or 
 
 [//]: # (![Forks]&#40;https://img.shields.io/github/forks/JuliettKhar/vue-photo-capture&#41;)
 [//]: # (![Stars]&#40;https://img.shields.io/github/stars/JuliettKhar/vue-photo-capture&#41;)
-[//]: # (![Coverage]&#40;https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture&#41;)
+![Coverage](https://img.shields.io/codecov/c/github/JuliettKhar/vue-photo-capture)
 ![Downloads](https://img.shields.io/npm/dt/vue-photo-capture)
 ![NPM Version](https://img.shields.io/npm/v/vue-photo-capture)
 ![Minified Size](https://img.shields.io/bundlephobia/min/vue-photo-capture)
@@ -116,6 +116,8 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | `takePhoto({ type?, quality?, mirror?, crop?, maxWidth?, maxHeight? })` | Full-res `ImageCapture` still, canvas fallback → `Promise<Blob>`. |
 | `editImage(blob, { crop?, maxWidth?, maxHeight?, mirror?, type?, quality? })` | Standalone: apply EXIF orientation, crop and resize to any blob → `Promise<Blob>`. |
 | `grabFrame()` | Grab the current frame as an `ImageBitmap` → `Promise<ImageBitmap>`. |
+| `captureBurst(count, { interval?, ...capture })` | Rapid burst → `Promise<Blob[]>` (`interval` ms apart, default 300). |
+| `captureAfter(seconds, { onTick?, ...capture })` | Self-timer: count down (calling `onTick`) then capture → `Promise<Blob>`. |
 | `startRecording({ mimeType?, timeslice?, ... })` | Start recording the stream. |
 | `stopRecording()` | Stop recording → `Promise<Blob>`. |
 | `pauseRecording()` / `resumeRecording()` | Pause/resume an in-progress recording. |
@@ -187,6 +189,10 @@ if (isBarcodeSupported) {
   startScanning((codes) => console.log(codes[0].rawValue));
 }
 ```
+> **Cross-browser:** `BarcodeDetector` is Chromium/Android only. For Safari/Firefox, install the
+> [`barcode-detector`](https://www.npmjs.com/package/barcode-detector) ponyfill and import its
+> side-effecting entry once (`import 'barcode-detector/side-effects'`) — it registers a global
+> `BarcodeDetector`, after which `isBarcodeSupported` becomes `true` and `scan()` just works.
 
 ### Record a video clip
 ```js
@@ -198,6 +204,14 @@ await setUpVideoForScreenshot();
 startRecording();               // ... later ...
 const clip = await stopRecording(); // Blob (video/webm)
 const url = URL.createObjectURL(clip);
+```
+
+### Self-timer & burst
+```js
+const { captureBurst, captureAfter } = usePhotoCapture();
+
+const shots = await captureBurst(5, { interval: 200 });      // 5 photos, 200ms apart
+const photo = await captureAfter(3, { onTick: (n) => console.log(n) }); // 3-2-1 then snap
 ```
 
 ### Crop & resize on capture

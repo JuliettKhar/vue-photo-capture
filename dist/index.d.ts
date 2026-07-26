@@ -213,6 +213,12 @@ export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly isImageCaptureSupported: boolean;
     readonly takePhoto: (captureOptions?: CaptureOptions) => Promise<Blob>;
     readonly grabFrame: () => Promise<ImageBitmap>;
+    readonly captureBurst: (count: number, options?: CaptureOptions & {
+        interval?: number;
+    }) => Promise<Blob[]>;
+    readonly captureAfter: (seconds: number, options?: CaptureOptions & {
+        onTick?: (remaining: number) => void;
+    }) => Promise<Blob>;
     readonly devices: Ref<{
         readonly deviceId: string;
         readonly groupId: string;

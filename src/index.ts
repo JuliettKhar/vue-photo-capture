@@ -122,6 +122,8 @@ export interface RecordOptions {
     timeslice?: number;
 }
 
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 const DEFAULT_CONSTRAINTS = {
     width: { max: 1280, ideal: 1280 },
     height: { min: 400, ideal: 1080 },
@@ -459,6 +461,40 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         return getImageCapture().grabFrame();
     };
 
+    /**
+     * Capture a rapid burst of `count` canvas frames, `interval` ms apart (default 300).
+     * Resolves with the array of blobs. `screenshotVideoBlob` holds the last one.
+     */
+    const captureBurst = async (
+        count: number,
+        options: CaptureOptions & { interval?: number } = {},
+    ): Promise<Blob[]> => {
+        const { interval = 300, ...captureOptions } = options;
+        const shots: Blob[] = [];
+        for (let i = 0; i < count; i += 1) {
+            if (i > 0) await delay(interval);
+            shots.push(await capturePhoto(targetVideo(), captureOptions));
+        }
+        return shots;
+    };
+
+    /**
+     * Count down `seconds` (calling `onTick` with the remaining count, ending at 0),
+     * then take a photo. Great for a self-timer.
+     */
+    const captureAfter = async (
+        seconds: number,
+        options: CaptureOptions & { onTick?: (remaining: number) => void } = {},
+    ): Promise<Blob> => {
+        const { onTick, ...captureOptions } = options;
+        for (let remaining = seconds; remaining > 0; remaining -= 1) {
+            onTick?.(remaining);
+            await delay(1000);
+        }
+        onTick?.(0);
+        return takePhoto(captureOptions);
+    };
+
     // --- output helpers ------------------------------------------------------
 
     /** Create a `blob:` object URL for the captured photo, auto-revoking the previous one. */
@@ -722,6 +758,9 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         isImageCaptureSupported,
         takePhoto,
         grabFrame,
+        // timed / burst capture
+        captureBurst,
+        captureAfter,
         // devices
         devices,
         currentDeviceId,

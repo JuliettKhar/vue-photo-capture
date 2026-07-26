@@ -1,6 +1,6 @@
 {
   "name": "vue-photo-capture",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "A Vue 3 Composition API library for capturing photos using a webcam or camera device.",
   "main": "dist/vue-photo-capture.mjs",
   "types": "dist/index.d.ts",
@@ -15,6 +15,7 @@
     "build": "vite build",
     "lint": "eslint src",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "deploy": "npm publish --non-interactive  --verbose",
     "predeploy:demo": "npm run build && rm -rf .gh-demo && mkdir -p .gh-demo/dist && cp index.html .gh-demo/ && cp dist/vue-photo-capture.umd.js dist/vue-photo-capture.mjs .gh-demo/dist/",
     "deploy:demo": "gh-pages -d .gh-demo -b gh-pages -m \"Deploy demo\""
