@@ -16,9 +16,14 @@
     "lint": "eslint src",
     "test": "jest",
     "test:coverage": "jest --coverage",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "deploy": "npm publish --non-interactive  --verbose",
     "predeploy:demo": "npm run build && rm -rf .gh-demo && mkdir -p .gh-demo/dist && cp index.html .gh-demo/ && cp dist/vue-photo-capture.umd.js dist/vue-photo-capture.mjs .gh-demo/dist/",
-    "deploy:demo": "gh-pages -d .gh-demo -b gh-pages -m \"Deploy demo\""
+    "deploy:demo": "gh-pages -d .gh-demo -b gh-pages -m \"Deploy demo\"",
+    "predeploy:site": "npm run build && npm run docs:build && rm -rf .gh-site && mkdir -p .gh-site/demo/dist && cp -R docs/.vitepress/dist/. .gh-site/ && cp index.html .gh-site/demo/ && cp dist/vue-photo-capture.umd.js dist/vue-photo-capture.mjs .gh-site/demo/dist/ && touch .gh-site/.nojekyll",
+    "deploy:site": "gh-pages -d .gh-site -b gh-pages -m \"Deploy docs + demo\" --dotfiles"
   },
   "repository": {
     "type": "git",
@@ -49,6 +54,7 @@
     "typescript": "~5.9.3",
     "vite": "~8.1.5",
     "vite-plugin-dts": "~4.5.4",
+    "vitepress": "^1.6.4",
     "vue": "~3.5.11"
   },
   "peerDependencies": {
