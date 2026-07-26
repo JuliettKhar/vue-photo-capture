@@ -30,6 +30,14 @@ export interface PhotoCaptureOptions {
     audio?: boolean;
 }
 
+/** A crop rectangle in source-image pixels. */
+export interface CropRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 export interface CaptureOptions {
     /** Output image mime type, e.g. `'image/png'` (default), `'image/jpeg'`, `'image/webp'`. */
     type?: string;
@@ -37,6 +45,68 @@ export interface CaptureOptions {
     quality?: number;
     /** Mirror the frame horizontally (useful for the front/selfie camera). */
     mirror?: boolean;
+    /** Crop rectangle in source pixels. Clamped to the source bounds. */
+    crop?: CropRect;
+    /** Downscale so the result fits within this width (aspect preserved; never upscales). */
+    maxWidth?: number;
+    /** Downscale so the result fits within this height (aspect preserved; never upscales). */
+    maxHeight?: number;
+}
+
+/** Compute a crop rect clamped to `[0..srcW] × [0..srcH]`, defaulting to the whole image. */
+function resolveCrop(srcW: number, srcH: number, crop?: CropRect): CropRect {
+    if (!crop) return { x: 0, y: 0, width: srcW, height: srcH };
+    const x = Math.max(0, Math.min(crop.x, srcW));
+    const y = Math.max(0, Math.min(crop.y, srcH));
+    return {
+        x,
+        y,
+        width: Math.max(1, Math.min(crop.width, srcW - x)),
+        height: Math.max(1, Math.min(crop.height, srcH - y)),
+    };
+}
+
+/** Fit `w × h` within optional max bounds, downscaling only (aspect preserved). */
+function fitWithin(w: number, h: number, maxW?: number, maxH?: number): { width: number; height: number } {
+    let scale = 1;
+    if (maxW && w > maxW) scale = Math.min(scale, maxW / w);
+    if (maxH && h > maxH) scale = Math.min(scale, maxH / h);
+    return { width: Math.max(1, Math.round(w * scale)), height: Math.max(1, Math.round(h * scale)) };
+}
+
+/**
+ * Post-process an image blob: apply EXIF orientation, optional crop, resize and mirror,
+ * then re-encode. Uses `createImageBitmap({ imageOrientation: 'from-image' })` so rotated
+ * phone photos come out upright. Handy for editing a captured photo before upload.
+ */
+export async function editImage(blob: Blob, options: CaptureOptions = {}): Promise<Blob> {
+    const bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    try {
+        const crop = resolveCrop(bitmap.width, bitmap.height, options.crop);
+        const { width: tw, height: th } = fitWithin(crop.width, crop.height, options.maxWidth, options.maxHeight);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = tw;
+        canvas.height = th;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Unable to get a 2D canvas context');
+
+        if (options.mirror) {
+            ctx.translate(tw, 0);
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, tw, th);
+
+        return await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(
+                (out) => (out ? resolve(out) : reject(new Error('Failed to encode the edited image'))),
+                options.type,
+                options.quality,
+            );
+        });
+    } finally {
+        bitmap.close();
+    }
 }
 
 export interface RecordOptions {
@@ -292,12 +362,20 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             // Prefer the intrinsic media size (videoWidth/videoHeight); fall back to the
             // width/height attributes. CSS-sized <video> elements leave the attributes at 0,
             // which would otherwise produce a 0×0 canvas and an empty blob.
-            const width = videoElem.width || videoElem.videoWidth;
-            const height = videoElem.height || videoElem.videoHeight;
-            if (!width || !height) {
+            const srcWidth = videoElem.width || videoElem.videoWidth;
+            const srcHeight = videoElem.height || videoElem.videoHeight;
+            if (!srcWidth || !srcHeight) {
                 fail('Video has no dimensions yet — is the camera stream playing?');
                 return;
             }
+
+            const crop = resolveCrop(srcWidth, srcHeight, captureOptions.crop);
+            const { width, height } = fitWithin(
+                crop.width,
+                crop.height,
+                captureOptions.maxWidth,
+                captureOptions.maxHeight,
+            );
 
             const canvas = document.createElement('canvas');
             canvas.width = width;
@@ -310,10 +388,10 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             }
 
             if (captureOptions.mirror) {
-                ctx.translate(canvas.width, 0);
+                ctx.translate(width, 0);
                 ctx.scale(-1, 1);
             }
-            ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(videoElem, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
             canvas.toBlob(
                 (blob) => {
                     if (!blob) {
@@ -350,7 +428,15 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
     const takePhoto = async (captureOptions: CaptureOptions = {}): Promise<Blob> => {
         if (isImageCaptureSupported && activeTrack()) {
             try {
-                const blob: Blob = await getImageCapture().takePhoto();
+                let blob: Blob = await getImageCapture().takePhoto();
+                // The ImageCapture blob is full-res and may carry EXIF orientation;
+                // post-process only when the caller asked for crop/resize/mirror.
+                const needsEdit =
+                    !!captureOptions.crop ||
+                    captureOptions.maxWidth != null ||
+                    captureOptions.maxHeight != null ||
+                    !!captureOptions.mirror;
+                if (needsEdit) blob = await editImage(blob, captureOptions);
                 screenshotVideoBlob.value = blob;
                 return blob;
             } catch {

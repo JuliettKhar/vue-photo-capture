@@ -18,6 +18,12 @@
                    background: rgba(0,0,0,.55); color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
         .rec-dot::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); animation: blink 1s steps(2) infinite; }
         @keyframes blink { 50% { opacity: .2; } }
+        .crop-frame { position: absolute; box-sizing: border-box; box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+                      border: 2px solid #fff; border-radius: 4px; pointer-events: auto; cursor: move; touch-action: none; }
+        .crop-frame .handle { position: absolute; right: -9px; bottom: -9px; width: 18px; height: 18px;
+                              background: #fff; border: 1px solid #999; border-radius: 50%; cursor: nwse-resize; touch-action: none; }
+        .crop-frame span { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+                           color: #fff; font-size: 11px; background: rgba(0,0,0,.5); padding: 2px 8px; border-radius: 999px; }
         .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
         button { padding: 9px 16px; font-size: 15px; cursor: pointer; background: var(--accent); color: #fff; border: none; border-radius: 8px; }
         button.secondary { background: #eceef1; color: #1c1e21; }
@@ -77,11 +83,17 @@
 
         <!-- Camera stage (stream auto-binds via the `videoRef` option) -->
         <div class="card">
-            <div class="stage">
+            <div class="stage" ref="stageRef">
                 <video ref="video" :class="{ mirrored: isFrontCamera }" playsinline autoplay muted
                        :style="{ cursor: canFocus ? 'crosshair' : 'default' }"
                        @loadedmetadata="ready = true" @playing="ready = true" @click="onVideoTap"></video>
                 <div class="rec-dot" v-if="isRecording">REC {{ recordSeconds }}s</div>
+                <div class="crop-frame" v-if="squareCrop"
+                     :style="{ left: cropBox.x + 'px', top: cropBox.y + 'px', width: cropBox.size + 'px', height: cropBox.size + 'px' }"
+                     @pointerdown="startDrag($event, 'move')">
+                    <span>drag to move · corner to resize</span>
+                    <div class="handle" @pointerdown.stop="startDrag($event, 'resize')"></div>
+                </div>
             </div>
 
             <div class="row">
@@ -91,6 +103,20 @@
                     {{ isActive && !ready ? 'Preparing…' : 'Capture photo' }}
                 </button>
                 <button class="secondary" @click="switchCamera()" :disabled="!isActive">Flip front/back</button>
+            </div>
+
+            <!-- Capture options (crop / resize) -->
+            <div class="row">
+                <label><input type="checkbox" v-model="squareCrop"/> Square crop</label>
+                <label>
+                    Max size:
+                    <select v-model.number="maxSize">
+                        <option :value="0">Off</option>
+                        <option :value="1024">1024</option>
+                        <option :value="640">640</option>
+                        <option :value="320">320</option>
+                    </select>
+                </label>
             </div>
 
             <!-- Device picker -->
@@ -214,7 +240,7 @@
 
 <script>
     const { usePhotoCapture } = window['vue-photo-capture'] || {};
-    const { createApp, ref, nextTick, onMounted, onBeforeUnmount } = Vue;
+    const { createApp, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } = Vue;
 
     createApp({
         setup() {
@@ -230,7 +256,7 @@
                 canWhiteBalance, colorTemperatureRange, colorTemperature,
                 isImageCaptureSupported, isBarcodeSupported, detectedCodes,
                 isRecordingSupported, isRecording,
-                setUpVideoForScreenshot, takePhoto, stop: stopCamera,
+                setUpVideoForScreenshot, takePhoto, capturePhoto, stop: stopCamera,
                 switchCamera: switchCam, toObjectURL, toDataURL, toFile,
                 setTorch, setZoom, startScanning, stopScanning,
                 setFocusDistance, focusAt, setExposureCompensation, setColorTemperature,
@@ -245,7 +271,46 @@
             const ready = ref(false);           // video has decoded a frame and has dimensions
             const recordSeconds = ref(0);
             const clipInfo = ref('');
+            const squareCrop = ref(false);
+            const maxSize = ref(0);
+            const stageRef = ref(null);
+            const cropBox = reactive({ x: 0, y: 0, size: 0 }); // in stage (display) pixels
+            let drag = null;
             const toast = ref('');
+
+            const clampCropBox = () => {
+                const el = stageRef.value; if (!el) return;
+                const r = el.getBoundingClientRect();
+                cropBox.size = Math.max(40, Math.min(cropBox.size, r.width, r.height));
+                cropBox.x = Math.max(0, Math.min(cropBox.x, r.width - cropBox.size));
+                cropBox.y = Math.max(0, Math.min(cropBox.y, r.height - cropBox.size));
+            };
+            const initCropBox = () => {
+                const el = stageRef.value; if (!el) return;
+                const r = el.getBoundingClientRect();
+                cropBox.size = Math.min(r.width, r.height) * 0.7;
+                cropBox.x = (r.width - cropBox.size) / 2;
+                cropBox.y = (r.height - cropBox.size) / 2;
+            };
+            const onDragMove = (e) => {
+                if (!drag) return;
+                const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+                if (drag.mode === 'move') { cropBox.x = drag.box.x + dx; cropBox.y = drag.box.y + dy; }
+                else { cropBox.size = drag.box.size + Math.max(dx, dy); }
+                clampCropBox();
+            };
+            const onDragEnd = () => {
+                drag = null;
+                window.removeEventListener('pointermove', onDragMove);
+                window.removeEventListener('pointerup', onDragEnd);
+            };
+            const startDrag = (e, mode) => {
+                e.preventDefault();
+                drag = { mode, startX: e.clientX, startY: e.clientY, box: { x: cropBox.x, y: cropBox.y, size: cropBox.size } };
+                window.addEventListener('pointermove', onDragMove);
+                window.addEventListener('pointerup', onDragEnd);
+            };
+            watch(squareCrop, (on) => { if (on) nextTick(initCropBox); });
             const justCaptured = ref(false);
             let toastTimer = null;
             let recordTimer = null;
@@ -269,10 +334,32 @@
                 try { await switchCam(deviceId); } catch (e) { /* surfaced via `error` ref */ }
             };
 
+            const buildCaptureOptions = () => {
+                const opts = { mirror: isFrontCamera.value };
+                if (maxSize.value) { opts.maxWidth = maxSize.value; opts.maxHeight = maxSize.value; }
+                if (squareCrop.value && video.value && stageRef.value) {
+                    // Map the on-screen crop box (stage px) to source pixels, inverting object-fit: cover.
+                    const r = stageRef.value.getBoundingClientRect();
+                    const VW = video.value.videoWidth, VH = video.value.videoHeight;
+                    const scale = Math.max(r.width / VW, r.height / VH);
+                    const offX = (r.width - VW * scale) / 2, offY = (r.height - VH * scale) / 2;
+                    let sx = (cropBox.x - offX) / scale;
+                    const sy = (cropBox.y - offY) / scale;
+                    const s = cropBox.size / scale;
+                    if (isFrontCamera.value) sx = VW - (sx + s); // preview is mirrored — un-mirror x
+                    opts.crop = { x: sx, y: sy, width: s, height: s };
+                }
+                return opts;
+            };
+
             const capture = async () => {
                 try {
-                    await takePhoto({ mirror: isFrontCamera.value }); // full-res via ImageCapture, canvas fallback
-                    preview.value = toObjectURL();                   // auto-revokes the previous URL
+                    const opts = buildCaptureOptions();
+                    // Crop is defined in preview-pixel space, so capture from the same <video>
+                    // frame (canvas). Without crop, use takePhoto for full sensor resolution.
+                    if (opts.crop) await capturePhoto(video.value, opts);
+                    else await takePhoto(opts);
+                    preview.value = toObjectURL();          // auto-revokes the previous URL
                     showToast('📸 Photo captured!');
                     justCaptured.value = false;
                     await nextTick();
@@ -346,6 +433,7 @@
 
             return {
                 video, previewCard, preview, clipUrl, clipInfo, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
+                squareCrop, maxSize, stageRef, cropBox, startDrag,
                 isSupported, isActive, error, permission,
                 devices, currentDeviceId, isFrontCamera,
                 canTorch, canZoom, zoomRange, torchOn, zoom,

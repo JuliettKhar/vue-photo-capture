@@ -112,8 +112,9 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | Method | Description |
 |---|---|
 | `setUpVideoForScreenshot(constraints?)` | Request the camera and start the stream. |
-| `capturePhoto(video?, { type?, quality?, mirror? })` | Capture a canvas frame → `Promise<Blob>`. |
-| `takePhoto({ type?, quality?, mirror? })` | Full-res `ImageCapture` still, canvas fallback → `Promise<Blob>`. |
+| `capturePhoto(video?, { type?, quality?, mirror?, crop?, maxWidth?, maxHeight? })` | Capture a canvas frame → `Promise<Blob>`. |
+| `takePhoto({ type?, quality?, mirror?, crop?, maxWidth?, maxHeight? })` | Full-res `ImageCapture` still, canvas fallback → `Promise<Blob>`. |
+| `editImage(blob, { crop?, maxWidth?, maxHeight?, mirror?, type?, quality? })` | Standalone: apply EXIF orientation, crop and resize to any blob → `Promise<Blob>`. |
 | `grabFrame()` | Grab the current frame as an `ImageBitmap` → `Promise<ImageBitmap>`. |
 | `startRecording({ mimeType?, timeslice?, ... })` | Start recording the stream. |
 | `stopRecording()` | Stop recording → `Promise<Blob>`. |
@@ -197,6 +198,26 @@ await setUpVideoForScreenshot();
 startRecording();               // ... later ...
 const clip = await stopRecording(); // Blob (video/webm)
 const url = URL.createObjectURL(clip);
+```
+
+### Crop & resize on capture
+```js
+const { takePhoto } = usePhotoCapture();
+
+// center-ish crop + downscale so the longest side ≤ 1024, as JPEG
+await takePhoto({
+  crop: { x: 200, y: 100, width: 800, height: 800 }, // source pixels (clamped)
+  maxWidth: 1024,
+  maxHeight: 1024,
+  type: 'image/jpeg',
+  quality: 0.85,
+});
+```
+`editImage(blob, options)` is also exported standalone — it applies EXIF orientation
+(so rotated phone photos come out upright), crop and resize to any blob:
+```js
+import { editImage } from 'vue-photo-capture';
+const thumb = await editImage(someBlob, { maxWidth: 320, maxHeight: 320 });
 ```
 
 ### Upload the photo
