@@ -124,6 +124,20 @@ export declare interface CaptureOptions {
     quality?: number;
     /** Mirror the frame horizontally (useful for the front/selfie camera). */
     mirror?: boolean;
+    /** Crop rectangle in source pixels. Clamped to the source bounds. */
+    crop?: CropRect;
+    /** Downscale so the result fits within this width (aspect preserved; never upscales). */
+    maxWidth?: number;
+    /** Downscale so the result fits within this height (aspect preserved; never upscales). */
+    maxHeight?: number;
+}
+
+/** A crop rectangle in source-image pixels. */
+export declare interface CropRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 /** A barcode/QR code detected by the native `BarcodeDetector`. */
@@ -136,6 +150,13 @@ export declare interface DetectedBarcode {
         y: number;
     }>;
 }
+
+/**
+ * Post-process an image blob: apply EXIF orientation, optional crop, resize and mirror,
+ * then re-encode. Uses `createImageBitmap({ imageOrientation: 'from-image' })` so rotated
+ * phone photos come out upright. Handy for editing a captured photo before upload.
+ */
+export declare function editImage(blob: Blob, options?: CaptureOptions): Promise<Blob>;
 
 export declare interface PhotoCaptureOptions {
     /** Stop tracks and reset state automatically when the host component unmounts. Default: `true`. */

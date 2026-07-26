@@ -1,6 +1,6 @@
 import {ref, nextTick, defineComponent, h} from 'vue';
 import {mount} from '@vue/test-utils';
-import {usePhotoCapture} from '../src';
+import {usePhotoCapture, editImage} from '../src';
 
 // A minimal MediaStream-like object good enough for setUp/stop/recording.
 const makeCameraStream = () => ({
@@ -119,7 +119,7 @@ describe('usePhotoCapture', () => {
         await expect(capturePhoto(mockVideo)).resolves.toBe(mockBlob);
 
         expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
-        expect(mockCanvas.getContext().drawImage).toHaveBeenCalledWith(mockVideo, 0, 0, 1280, 720);
+        expect(mockCanvas.getContext().drawImage).toHaveBeenCalledWith(mockVideo, 0, 0, 1280, 720, 0, 0, 1280, 720);
         expect(mockCanvas.toBlob).toHaveBeenCalled();
         expect(screenshotVideoBlob.value).toBe(mockBlob);
     });
@@ -145,7 +145,7 @@ describe('usePhotoCapture', () => {
 
         expect(mockCanvas.width).toBe(640);
         expect(mockCanvas.height).toBe(480);
-        expect(mockCanvas.getContext().drawImage).toHaveBeenCalledWith(videoElem, 0, 0, 640, 480);
+        expect(mockCanvas.getContext().drawImage).toHaveBeenCalledWith(videoElem, 0, 0, 640, 480, 0, 0, 640, 480);
     });
 
     it('should reject when there is no video element to capture from', async () => {
@@ -329,6 +329,78 @@ describe('usePhotoCapture', () => {
             await expect(cam.setFocusDistance(1)).rejects.toThrow('Manual focus is not supported');
             await expect(cam.setExposureCompensation(1)).rejects.toThrow('Exposure is not supported');
             await expect(cam.setColorTemperature(4000)).rejects.toThrow('White balance is not supported');
+        });
+    });
+
+    describe('crop / resize / editImage', () => {
+        const mockCanvasFactory = (blob: Blob) => {
+            const ctx = {drawImage: jest.fn(), translate: jest.fn(), scale: jest.fn()};
+            const canvas = {width: 0, height: 0, getContext: () => ctx, toBlob: (cb: any) => cb(blob)};
+            return {canvas, ctx};
+        };
+
+        it('capturePhoto crops and downscales the frame', async () => {
+            const outBlob = new Blob();
+            const {canvas, ctx} = mockCanvasFactory(outBlob);
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+
+            const videoElem = {width: 0, height: 0, videoWidth: 1000, videoHeight: 800} as any;
+            const {capturePhoto} = usePhotoCapture();
+
+            await capturePhoto(videoElem, {crop: {x: 100, y: 50, width: 400, height: 300}, maxWidth: 200});
+
+            // 400×300 fit within maxWidth 200 → scale 0.5 → 200×150
+            expect(canvas.width).toBe(200);
+            expect(canvas.height).toBe(150);
+            expect(ctx.drawImage).toHaveBeenCalledWith(videoElem, 100, 50, 400, 300, 0, 0, 200, 150);
+        });
+
+        it('editImage applies EXIF orientation, crop and resize', async () => {
+            const outBlob = new Blob(['out'], {type: 'image/png'});
+            const {canvas, ctx} = mockCanvasFactory(outBlob);
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+            const bitmap = {width: 1000, height: 800, close: jest.fn()};
+            (global as any).createImageBitmap = jest.fn().mockResolvedValue(bitmap);
+
+            try {
+                const result = await editImage(new Blob(['in']), {
+                    crop: {x: 200, y: 100, width: 600, height: 600},
+                    maxHeight: 300,
+                });
+
+                expect((global as any).createImageBitmap).toHaveBeenCalledWith(expect.any(Blob), {imageOrientation: 'from-image'});
+                // 600×600 fit within maxHeight 300 → 300×300
+                expect(canvas.width).toBe(300);
+                expect(canvas.height).toBe(300);
+                expect(ctx.drawImage).toHaveBeenCalledWith(bitmap, 200, 100, 600, 600, 0, 0, 300, 300);
+                expect(bitmap.close).toHaveBeenCalled();
+                expect(result).toBe(outBlob);
+            } finally {
+                delete (global as any).createImageBitmap;
+            }
+        });
+
+        it('clamps a crop rect to the source bounds', async () => {
+            const outBlob = new Blob();
+            const {canvas, ctx} = mockCanvasFactory(outBlob);
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+
+            const videoElem = {width: 0, height: 0, videoWidth: 640, videoHeight: 480} as any;
+            const {capturePhoto} = usePhotoCapture();
+
+            // crop extends past the right/bottom edges → clamped to 440×280 from (200,200)
+            await capturePhoto(videoElem, {crop: {x: 200, y: 200, width: 9999, height: 9999}});
+
+            expect(ctx.drawImage).toHaveBeenCalledWith(videoElem, 200, 200, 440, 280, 0, 0, 440, 280);
         });
     });
 
