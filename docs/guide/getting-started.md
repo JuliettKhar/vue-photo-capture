@@ -83,5 +83,6 @@ works in any template. Configure via the `vuePhotoCapture` key (`composables`, `
 
 - [usePhotoCapture](/guide/use-photo-capture) — the composable in depth
 - [`<CameraCapture>`](/guide/camera-capture) — the drop-in component
+- [Nuxt](/guide/nuxt) — auto-imports + global component
 - [Recipes](/guide/recipes) — switch cameras, torch/zoom, recording, scanning, crop/resize, self-timer
 - [API](/api) — full reference
