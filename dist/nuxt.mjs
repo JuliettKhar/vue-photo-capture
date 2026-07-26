@@ -1,6 +1,6 @@
-import { addComponent as e, addImports as t, defineNuxtModule as n } from "@nuxt/kit";
+import { addComponent as e, addImports as t, defineNuxtModule as n, resolvePath as r } from "@nuxt/kit";
 //#region src/nuxt.ts
-var r = n({
+var i = n({
 	meta: {
 		name: "vue-photo-capture",
 		configKey: "vuePhotoCapture",
@@ -11,7 +11,7 @@ var r = n({
 		component: !0,
 		prefix: ""
 	},
-	setup(n) {
+	async setup(n) {
 		n.composables !== !1 && t([{
 			name: "usePhotoCapture",
 			from: "vue-photo-capture"
@@ -21,9 +21,9 @@ var r = n({
 		}]), n.component !== !1 && e({
 			name: `${n.prefix ?? ""}CameraCapture`,
 			export: "CameraCapture",
-			filePath: "vue-photo-capture"
+			filePath: await r("vue-photo-capture")
 		});
 	}
 });
 //#endregion
-export { r as default };
+export { i as default };
