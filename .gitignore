@@ -3,4 +3,7 @@ node_modules/
 .idea/
 package-lock.json
 .gh-demo/
+.gh-site/
 coverage/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
