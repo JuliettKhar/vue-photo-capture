@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-07-26
+
+### Added
+- **Self-timer & burst capture** — `captureBurst(count, { interval?, ...capture })` → `Promise<Blob[]>` (default 300ms apart) and `captureAfter(seconds, { onTick?, ...capture })` → `Promise<Blob>` (counts down, calling `onTick`, then captures).
+
+### Docs / tooling
+- Coverage badge + `npm run test:coverage`.
+- Note on the `barcode-detector` ponyfill for Safari/Firefox `scan()` support.
+
 ## [1.6.0] - 2026-07-26
 
 ### Added

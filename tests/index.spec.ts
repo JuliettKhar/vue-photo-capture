@@ -421,6 +421,44 @@ describe('usePhotoCapture', () => {
         });
     });
 
+    describe('timed / burst capture', () => {
+        const setupCanvasStream = () => {
+            const blob = new Blob(['shot']);
+            const ctx = {drawImage: jest.fn(), translate: jest.fn(), scale: jest.fn()};
+            const canvas = {width: 0, height: 0, getContext: () => ctx, toBlob: (cb: any) => cb(blob)};
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(makeCameraStream() as any);
+            return blob;
+        };
+
+        it('captureBurst returns one blob per shot', async () => {
+            const blob = setupCanvasStream();
+            const {setUpVideoForScreenshot, captureBurst, screenshotVideoBlob} = usePhotoCapture();
+            await setUpVideoForScreenshot();
+
+            const shots = await captureBurst(3, {interval: 0});
+
+            expect(shots).toHaveLength(3);
+            expect(shots.every((b) => b === blob)).toBe(true);
+            expect(screenshotVideoBlob.value).toBe(blob);
+        });
+
+        it('captureAfter runs the countdown and resolves with a photo', async () => {
+            const blob = setupCanvasStream();
+            const onTick = jest.fn();
+            const {setUpVideoForScreenshot, captureAfter} = usePhotoCapture();
+            await setUpVideoForScreenshot();
+
+            const shot = await captureAfter(0, {onTick});
+
+            expect(onTick).toHaveBeenCalledWith(0);
+            expect(shot).toBe(blob);
+        });
+    });
+
     describe('barcode scanning', () => {
         it('scan rejects when BarcodeDetector is unavailable', async () => {
             const {scan, isBarcodeSupported} = usePhotoCapture();

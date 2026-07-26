@@ -18,6 +18,9 @@
                    background: rgba(0,0,0,.55); color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
         .rec-dot::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); animation: blink 1s steps(2) infinite; }
         @keyframes blink { 50% { opacity: .2; } }
+        .countdown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                     font-size: 96px; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.6);
+                     background: rgba(0,0,0,.25); pointer-events: none; }
         .crop-frame { position: absolute; box-sizing: border-box; box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
                       border: 2px solid #fff; border-radius: 4px; pointer-events: auto; cursor: move; touch-action: none; }
         .crop-frame .handle { position: absolute; right: -9px; bottom: -9px; width: 18px; height: 18px;
@@ -88,6 +91,7 @@
                        :style="{ cursor: canFocus ? 'crosshair' : 'default' }"
                        @loadedmetadata="ready = true" @playing="ready = true" @click="onVideoTap"></video>
                 <div class="rec-dot" v-if="isRecording">REC {{ recordSeconds }}s</div>
+                <div class="countdown" v-if="countdown > 0">{{ countdown }}</div>
                 <div class="crop-frame" v-if="squareCrop"
                      :style="{ left: cropBox.x + 'px', top: cropBox.y + 'px', width: cropBox.size + 'px', height: cropBox.size + 'px' }"
                      @pointerdown="startDrag($event, 'move')">
@@ -103,6 +107,8 @@
                     {{ isActive && !ready ? 'Preparing…' : 'Capture photo' }}
                 </button>
                 <button class="secondary" @click="switchCamera()" :disabled="!isActive">Flip front/back</button>
+                <button class="secondary" @click="burst" :disabled="!isActive || !ready">Burst ×3</button>
+                <button class="secondary" @click="timer" :disabled="!isActive || !ready || countdown > 0">⏱ 3s</button>
             </div>
 
             <!-- Capture options (crop / resize) -->
@@ -256,7 +262,7 @@
                 canWhiteBalance, colorTemperatureRange, colorTemperature,
                 isImageCaptureSupported, isBarcodeSupported, detectedCodes,
                 isRecordingSupported, isRecording,
-                setUpVideoForScreenshot, takePhoto, capturePhoto, stop: stopCamera,
+                setUpVideoForScreenshot, takePhoto, capturePhoto, captureBurst, captureAfter, stop: stopCamera,
                 switchCamera: switchCam, toObjectURL, toDataURL, toFile,
                 setTorch, setZoom, startScanning, stopScanning,
                 setFocusDistance, focusAt, setExposureCompensation, setColorTemperature,
@@ -273,6 +279,7 @@
             const clipInfo = ref('');
             const squareCrop = ref(false);
             const maxSize = ref(0);
+            const countdown = ref(0);
             const stageRef = ref(null);
             const cropBox = reactive({ x: 0, y: 0, size: 0 }); // in stage (display) pixels
             let drag = null;
@@ -368,6 +375,23 @@
                 } catch (e) { /* surfaced via `error` ref */ }
             };
 
+            const burst = async () => {
+                try {
+                    const shots = await captureBurst(3, { ...buildCaptureOptions(), interval: 250 });
+                    if (shots.length) preview.value = toObjectURL(shots[shots.length - 1]);
+                    showToast('📸 Burst: ' + shots.length + ' shots');
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const timer = async () => {
+                try {
+                    await captureAfter(3, { ...buildCaptureOptions(), onTick: (n) => { countdown.value = n; } });
+                    preview.value = toObjectURL();
+                    showToast('📸 Photo captured!');
+                } catch (e) { /* surfaced via `error` ref */ }
+                finally { countdown.value = 0; }
+            };
+
             const record = () => {
                 try {
                     startRecording();
@@ -433,7 +457,7 @@
 
             return {
                 video, previewCard, preview, clipUrl, clipInfo, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
-                squareCrop, maxSize, stageRef, cropBox, startDrag,
+                squareCrop, maxSize, countdown, stageRef, cropBox, startDrag,
                 isSupported, isActive, error, permission,
                 devices, currentDeviceId, isFrontCamera,
                 canTorch, canZoom, zoomRange, torchOn, zoom,
@@ -442,7 +466,7 @@
                 canWhiteBalance, colorTemperatureRange, colorTemperature,
                 isImageCaptureSupported, isBarcodeSupported, detectedCodes,
                 isRecordingSupported, isRecording,
-                start, stop, switchCamera, capture, record, stopRecord, downloadClip,
+                start, stop, switchCamera, capture, burst, timer, record, stopRecord, downloadClip,
                 toggleTorch, onZoom, onFocus, onExposure, onWhiteBalance, onVideoTap,
                 toggleScan, download, copyDataUrl, reset,
             };
