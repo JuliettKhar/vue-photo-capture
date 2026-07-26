@@ -429,7 +429,7 @@
             const reset = () => { preview.value = ''; dataUrlLen.value = 0; };
 
             onMounted(start);
-            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); clearInterval(recordTimer); });
+            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); clearInterval(recordTimer); onDragEnd(); });
 
             return {
                 video, previewCard, preview, clipUrl, clipInfo, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,

@@ -402,6 +402,23 @@ describe('usePhotoCapture', () => {
 
             expect(ctx.drawImage).toHaveBeenCalledWith(videoElem, 200, 200, 440, 280, 0, 0, 440, 280);
         });
+
+        it('keeps the crop origin in-bounds when it starts at/past the far edge', async () => {
+            const outBlob = new Blob();
+            const {canvas, ctx} = mockCanvasFactory(outBlob);
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+
+            const videoElem = {width: 0, height: 0, videoWidth: 640, videoHeight: 480} as any;
+            const {capturePhoto} = usePhotoCapture();
+
+            // x === srcW → origin clamped to 639, width stays a valid in-bounds 1px
+            await capturePhoto(videoElem, {crop: {x: 640, y: 0, width: 100, height: 100}});
+
+            expect(ctx.drawImage).toHaveBeenCalledWith(videoElem, 639, 0, 1, 100, 0, 0, 1, 100);
+        });
     });
 
     describe('barcode scanning', () => {
@@ -536,6 +553,41 @@ describe('usePhotoCapture', () => {
             } finally {
                 delete (window as any).ImageCapture;
                 if (orig !== undefined) (window as any).ImageCapture = orig;
+            }
+        });
+
+        it('takePhoto re-encodes via editImage when type/quality is requested', async () => {
+            const rawBlob = new Blob(['img'], {type: 'image/png'});
+            const encodedBlob = new Blob(['jpeg'], {type: 'image/jpeg'});
+            const origIC = (window as any).ImageCapture;
+            (window as any).ImageCapture = jest.fn().mockImplementation(() => ({
+                takePhoto: jest.fn().mockResolvedValue(rawBlob),
+                grabFrame: jest.fn(),
+            }));
+            const bitmap = {width: 800, height: 600, close: jest.fn()};
+            (global as any).createImageBitmap = jest.fn().mockResolvedValue(bitmap);
+            const ctx = {drawImage: jest.fn(), translate: jest.fn(), scale: jest.fn()};
+            const canvas = {width: 0, height: 0, getContext: () => ctx, toBlob: (cb: any) => cb(encodedBlob)};
+            const realCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tag: any) =>
+                tag === 'canvas' ? (canvas as any) : realCreateElement(tag),
+            );
+            try {
+                jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                    .mockResolvedValue(makeCameraStream() as any);
+
+                const {setUpVideoForScreenshot, takePhoto, screenshotVideoBlob} = usePhotoCapture();
+                await setUpVideoForScreenshot();
+
+                const blob = await takePhoto({type: 'image/jpeg', quality: 0.8});
+
+                expect((global as any).createImageBitmap).toHaveBeenCalled(); // editImage ran
+                expect(blob).toBe(encodedBlob);
+                expect(screenshotVideoBlob.value).toBe(encodedBlob);
+            } finally {
+                delete (window as any).ImageCapture;
+                if (origIC !== undefined) (window as any).ImageCapture = origIC;
+                delete (global as any).createImageBitmap;
             }
         });
 
