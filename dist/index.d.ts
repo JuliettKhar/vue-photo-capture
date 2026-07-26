@@ -241,6 +241,43 @@ export declare function usePhotoCapture(options?: PhotoCaptureOptions): {
     readonly zoom: Ref<number, number>;
     readonly setTorch: (on: boolean) => Promise<void>;
     readonly setZoom: (value: number) => Promise<void>;
+    readonly canFocus: Ref<boolean, boolean>;
+    readonly focusRange: Ref<{
+        min: number;
+        max: number;
+        step: number;
+    } | null, ZoomRange | {
+        min: number;
+        max: number;
+        step: number;
+    } | null>;
+    readonly focusDistance: Ref<number | null, number | null>;
+    readonly setFocusDistance: (value: number) => Promise<void>;
+    readonly focusAt: (x: number, y: number) => Promise<void>;
+    readonly canExposure: Ref<boolean, boolean>;
+    readonly exposureRange: Ref<{
+        min: number;
+        max: number;
+        step: number;
+    } | null, ZoomRange | {
+        min: number;
+        max: number;
+        step: number;
+    } | null>;
+    readonly exposureCompensation: Ref<number | null, number | null>;
+    readonly setExposureCompensation: (value: number) => Promise<void>;
+    readonly canWhiteBalance: Ref<boolean, boolean>;
+    readonly colorTemperatureRange: Ref<{
+        min: number;
+        max: number;
+        step: number;
+    } | null, ZoomRange | {
+        min: number;
+        max: number;
+        step: number;
+    } | null>;
+    readonly colorTemperature: Ref<number | null, number | null>;
+    readonly setColorTemperature: (value: number) => Promise<void>;
     readonly isRecordingSupported: boolean;
     readonly isRecording: Ref<boolean, boolean>;
     readonly recordedBlob: Ref<{

@@ -95,6 +95,9 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | `canTorch` / `canZoom` | `Ref<boolean>` | Hardware capability flags. |
 | `zoomRange` | `Ref<{ min, max, step } \| null>` | Allowed zoom range. |
 | `torchOn` / `zoom` | `Ref<boolean>` / `Ref<number>` | Current torch/zoom values. |
+| `canFocus` / `canExposure` / `canWhiteBalance` | `Ref<boolean>` | Advanced-control capability flags. |
+| `focusRange` / `exposureRange` / `colorTemperatureRange` | `Ref<{ min, max, step } \| null>` | Allowed ranges for the advanced controls. |
+| `focusDistance` / `exposureCompensation` / `colorTemperature` | `Ref<number \| null>` | Current advanced-control values. |
 | `isBarcodeSupported` | `boolean` | `BarcodeDetector` availability. |
 | `detectedCodes` | `Ref<DetectedBarcode[]>` | Codes from the last scan. |
 | `resolution` | `Ref<{ width, height } \| null>` | Actual stream resolution. |
@@ -122,6 +125,8 @@ The composable **automatically stops all tracks on unmount** (disable via `usePh
 | `toDataURL(blob?)` | `Promise<string>` base64 data URL. |
 | `toFile(name?, blob?)` | Wrap the photo in a `File` for uploads. |
 | `setTorch(on)` / `setZoom(value)` | Control torch/zoom (throws if unsupported). |
+| `setFocusDistance(v)` / `focusAt(x, y)` | Manual focus / tap-to-focus at a normalized point `0..1` (throws if unsupported). |
+| `setExposureCompensation(v)` / `setColorTemperature(kelvin)` | Manual exposure / white balance (throws if unsupported). |
 | `scan(source?)` | Detect codes in one frame → `Promise<DetectedBarcode[]>`. |
 | `startScanning(onDetect?)` / `stopScanning()` | Continuous scanning loop. |
 
@@ -158,6 +163,20 @@ const { devices, currentDeviceId, switchCamera } = usePhotoCapture();
 const { canTorch, canZoom, zoomRange, setTorch, setZoom } = usePhotoCapture();
 if (canTorch.value) await setTorch(true);
 if (canZoom.value) await setZoom(zoomRange.value.max);
+```
+
+### Advanced controls (focus / exposure / white balance)
+```js
+const {
+  canFocus, focusRange, setFocusDistance, focusAt,
+  canExposure, exposureRange, setExposureCompensation,
+  canWhiteBalance, colorTemperatureRange, setColorTemperature,
+} = usePhotoCapture();
+
+if (canFocus.value) await setFocusDistance(focusRange.value.min); // near focus
+await focusAt(0.5, 0.5);                                          // tap-to-focus (center)
+if (canExposure.value) await setExposureCompensation(exposureRange.value.max);
+if (canWhiteBalance.value) await setColorTemperature(5600);       // daylight
 ```
 
 ### Scan QR / barcodes
