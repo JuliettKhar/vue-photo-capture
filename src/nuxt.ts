@@ -1,4 +1,4 @@
-import { defineNuxtModule, addComponent, addImports } from '@nuxt/kit';
+import { defineNuxtModule, addComponent, addImports, resolvePath } from '@nuxt/kit';
 
 export interface ModuleOptions {
     /** Auto-import `usePhotoCapture` and `editImage`. Default: `true`. */
@@ -32,7 +32,7 @@ export default defineNuxtModule<ModuleOptions>({
         component: true,
         prefix: '',
     },
-    setup(options: ModuleOptions) {
+    async setup(options: ModuleOptions) {
         if (options.composables !== false) {
             addImports([
                 { name: 'usePhotoCapture', from: 'vue-photo-capture' },
@@ -41,10 +41,12 @@ export default defineNuxtModule<ModuleOptions>({
         }
 
         if (options.component !== false) {
+            // Resolve the package to an absolute path — addComponent expects a
+            // filesystem path, not a bare module specifier.
             addComponent({
                 name: `${options.prefix ?? ''}CameraCapture`,
                 export: 'CameraCapture',
-                filePath: 'vue-photo-capture',
+                filePath: await resolvePath('vue-photo-capture'),
             });
         }
     },
