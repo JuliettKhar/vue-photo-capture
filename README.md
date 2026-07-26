@@ -11,6 +11,8 @@ A Vue 3 Composition API library for capturing photos and video from a webcam or 
 ![Open Issues](https://img.shields.io/github/issues/JuliettKhar/vue-photo-capture)
 ![License](https://img.shields.io/npm/l/vue-photo-capture)
 
+**[🎥 Live Demo](https://juliettkhar.github.io/vue-photo-capture/demo/)** · **[📖 Documentation](https://juliettkhar.github.io/vue-photo-capture/)**
+
 ## Features
 
 - **Stream lifecycle** — start/stop the camera with real cleanup (tracks are stopped, no leaked camera light).
