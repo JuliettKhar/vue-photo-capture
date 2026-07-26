@@ -16,6 +16,8 @@
     "lint": "eslint src",
     "test": "jest",
     "test:coverage": "jest --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -40,6 +42,7 @@
   "devDependencies": {
     "@eslint/js": "~10.0.1",
     "@jest/globals": "~30.2.0",
+    "@playwright/test": "^1.62.0",
     "@types/jest": "~29.5.12",
     "@vitejs/plugin-vue": "~6.0.8",
     "@vue/eslint-config-typescript": "~14.9.0",
