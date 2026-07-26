@@ -278,6 +278,58 @@ describe('usePhotoCapture', () => {
             const {setTorch} = usePhotoCapture();
             await expect(setTorch(true)).rejects.toThrow('Camera is not active');
         });
+
+        it('exposes advanced capabilities and applies focus/exposure/white-balance', async () => {
+            const applyConstraints = jest.fn().mockResolvedValue(undefined);
+            const stream = {
+                getVideoTracks: () => [{
+                    getSettings: () => ({width: 1280, height: 720}),
+                    getCapabilities: () => ({
+                        focusDistance: {min: 0, max: 10, step: 0.1},
+                        exposureCompensation: {min: -3, max: 3, step: 0.5},
+                        colorTemperature: {min: 2800, max: 6500, step: 100},
+                    }),
+                    applyConstraints,
+                    stop: jest.fn(),
+                }],
+                getTracks: () => [{stop: jest.fn()}],
+            };
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia').mockResolvedValue(stream as any);
+
+            const cam = usePhotoCapture();
+            await cam.setUpVideoForScreenshot();
+
+            expect(cam.canFocus.value).toBe(true);
+            expect(cam.focusRange.value).toEqual({min: 0, max: 10, step: 0.1});
+            expect(cam.canExposure.value).toBe(true);
+            expect(cam.canWhiteBalance.value).toBe(true);
+            expect(cam.colorTemperatureRange.value).toEqual({min: 2800, max: 6500, step: 100});
+
+            await cam.setFocusDistance(5);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{focusMode: 'manual', focusDistance: 5}]});
+
+            await cam.focusAt(0.5, 0.5);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{focusMode: 'single-shot', pointsOfInterest: [{x: 0.5, y: 0.5}]}]});
+
+            await cam.setExposureCompensation(1.5);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{exposureMode: 'manual', exposureCompensation: 1.5}]});
+
+            await cam.setColorTemperature(5000);
+            expect(applyConstraints).toHaveBeenCalledWith({advanced: [{whiteBalanceMode: 'manual', colorTemperature: 5000}]});
+        });
+
+        it('advanced setters reject when the capability is unsupported', async () => {
+            jest.spyOn(global.navigator.mediaDevices, 'getUserMedia')
+                .mockResolvedValue(makeCameraStream() as any); // no getCapabilities → nothing supported
+
+            const cam = usePhotoCapture();
+            await cam.setUpVideoForScreenshot();
+
+            expect(cam.canFocus.value).toBe(false);
+            await expect(cam.setFocusDistance(1)).rejects.toThrow('Manual focus is not supported');
+            await expect(cam.setExposureCompensation(1)).rejects.toThrow('Exposure is not supported');
+            await expect(cam.setColorTemperature(4000)).rejects.toThrow('White balance is not supported');
+        });
     });
 
     describe('barcode scanning', () => {

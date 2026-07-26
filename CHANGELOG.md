@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-26
+
+### Added
+- **Advanced camera controls** (same capability-guarded pattern as torch/zoom):
+  - Focus — `setFocusDistance(v)`, tap-to-focus `focusAt(x, y)`, with `canFocus`, `focusRange`, `focusDistance`.
+  - Exposure — `setExposureCompensation(v)`, with `canExposure`, `exposureRange`, `exposureCompensation`.
+  - White balance — `setColorTemperature(kelvin)`, with `canWhiteBalance`, `colorTemperatureRange`, `colorTemperature`.
+
+  All are progressive enhancements — gate them behind the `can*` flags (mainly Chromium/Android).
+
 ## [1.4.0] - 2026-07-26
 
 ### Added

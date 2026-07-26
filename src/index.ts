@@ -96,6 +96,17 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
     const torchOn = ref(false);
     const zoom = ref(1);
 
+    // advanced constraints (focus / exposure / white balance)
+    const canFocus = ref(false);
+    const focusRange = ref<ZoomRange | null>(null);
+    const focusDistance = ref<number | null>(null);
+    const canExposure = ref(false);
+    const exposureRange = ref<ZoomRange | null>(null);
+    const exposureCompensation = ref<number | null>(null);
+    const canWhiteBalance = ref(false);
+    const colorTemperatureRange = ref<ZoomRange | null>(null);
+    const colorTemperature = ref<number | null>(null);
+
     // --- barcode scanning ----------------------------------------------------
     const detectedCodes = ref<DetectedBarcode[]>([]);
 
@@ -198,17 +209,38 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
                 : settings.aspectRatio ?? null;
             currentDeviceId.value = settings.deviceId ?? null;
             isFrontCamera.value = settings.facingMode === 'user';
+            type CapRange = { min: number; max: number; step?: number };
             const caps = (track.getCapabilities?.() ?? {}) as MediaTrackCapabilities & {
                 torch?: boolean;
-                zoom?: { min: number; max: number; step?: number };
+                zoom?: CapRange;
+                focusDistance?: CapRange;
+                exposureCompensation?: CapRange;
+                colorTemperature?: CapRange;
             };
+            const s = settings as MediaTrackSettings & {
+                zoom?: number;
+                focusDistance?: number;
+                exposureCompensation?: number;
+                colorTemperature?: number;
+            };
+            const toRange = (r?: CapRange): ZoomRange | null =>
+                r ? { min: r.min, max: r.max, step: r.step ?? 0.1 } : null;
+
             canTorch.value = !!caps.torch;
             canZoom.value = !!caps.zoom;
-            zoomRange.value = caps.zoom
-                ? { min: caps.zoom.min, max: caps.zoom.max, step: caps.zoom.step ?? 0.1 }
-                : null;
+            zoomRange.value = toRange(caps.zoom);
             torchOn.value = false;
-            zoom.value = (settings as MediaTrackSettings & { zoom?: number }).zoom ?? 1;
+            zoom.value = s.zoom ?? 1;
+
+            canFocus.value = !!caps.focusDistance;
+            focusRange.value = toRange(caps.focusDistance);
+            focusDistance.value = s.focusDistance ?? null;
+            canExposure.value = !!caps.exposureCompensation;
+            exposureRange.value = toRange(caps.exposureCompensation);
+            exposureCompensation.value = s.exposureCompensation ?? null;
+            canWhiteBalance.value = !!caps.colorTemperature;
+            colorTemperatureRange.value = toRange(caps.colorTemperature);
+            colorTemperature.value = s.colorTemperature ?? null;
 
             // device labels/ids become available only after permission is granted
             await refreshDevices();
@@ -367,22 +399,64 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
 
     // --- hardware controls ---------------------------------------------------
 
-    /** Toggle the camera torch/flashlight (where supported). */
-    const setTorch = async (on: boolean): Promise<void> => {
+    // Apply a single advanced MediaTrackConstraint to the active track, guarded by a
+    // capability flag. Non-standard constraint keys are cast through `unknown`.
+    const applyAdvanced = async (
+        supported: boolean,
+        label: string,
+        constraint: Record<string, unknown>,
+    ): Promise<void> => {
         const track = activeTrack();
         if (!track) throw new Error('Camera is not active');
-        if (!canTorch.value) throw new Error('Torch is not supported by this camera');
-        await track.applyConstraints({ advanced: [{ torch: on }] } as unknown as MediaTrackConstraints);
+        if (!supported) throw new Error(`${label} is not supported by this camera`);
+        await track.applyConstraints({ advanced: [constraint] } as unknown as MediaTrackConstraints);
+    };
+
+    /** Toggle the camera torch/flashlight (where supported). */
+    const setTorch = async (on: boolean): Promise<void> => {
+        await applyAdvanced(canTorch.value, 'Torch', { torch: on });
         torchOn.value = on;
     };
 
     /** Set the optical/digital zoom level within `zoomRange` (where supported). */
     const setZoom = async (value: number): Promise<void> => {
-        const track = activeTrack();
-        if (!track) throw new Error('Camera is not active');
-        if (!canZoom.value) throw new Error('Zoom is not supported by this camera');
-        await track.applyConstraints({ advanced: [{ zoom: value }] } as unknown as MediaTrackConstraints);
+        await applyAdvanced(canZoom.value, 'Zoom', { zoom: value });
         zoom.value = value;
+    };
+
+    /** Set the manual focus distance within `focusRange` (where supported). */
+    const setFocusDistance = async (value: number): Promise<void> => {
+        await applyAdvanced(canFocus.value, 'Manual focus', { focusMode: 'manual', focusDistance: value });
+        focusDistance.value = value;
+    };
+
+    /**
+     * Tap-to-focus at a normalized point (`x`/`y` in `0..1`, top-left origin)
+     * using a single-shot autofocus (where supported).
+     */
+    const focusAt = async (x: number, y: number): Promise<void> => {
+        await applyAdvanced(canFocus.value, 'Focus', {
+            focusMode: 'single-shot',
+            pointsOfInterest: [{ x, y }],
+        });
+    };
+
+    /** Set the exposure compensation within `exposureRange` (where supported). */
+    const setExposureCompensation = async (value: number): Promise<void> => {
+        await applyAdvanced(canExposure.value, 'Exposure', {
+            exposureMode: 'manual',
+            exposureCompensation: value,
+        });
+        exposureCompensation.value = value;
+    };
+
+    /** Set the white-balance color temperature (Kelvin) within range (where supported). */
+    const setColorTemperature = async (value: number): Promise<void> => {
+        await applyAdvanced(canWhiteBalance.value, 'White balance', {
+            whiteBalanceMode: 'manual',
+            colorTemperature: value,
+        });
+        colorTemperature.value = value;
     };
 
     // --- video recording -----------------------------------------------------
@@ -521,6 +595,15 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         canZoom.value = false;
         zoomRange.value = null;
         torchOn.value = false;
+        canFocus.value = false;
+        focusRange.value = null;
+        focusDistance.value = null;
+        canExposure.value = false;
+        exposureRange.value = null;
+        exposureCompensation.value = null;
+        canWhiteBalance.value = false;
+        colorTemperatureRange.value = null;
+        colorTemperature.value = null;
         resolution.value = null;
         aspectRatio.value = null;
     };
@@ -570,6 +653,20 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
         zoom,
         setTorch,
         setZoom,
+        // advanced constraints
+        canFocus,
+        focusRange,
+        focusDistance,
+        setFocusDistance,
+        focusAt,
+        canExposure,
+        exposureRange,
+        exposureCompensation,
+        setExposureCompensation,
+        canWhiteBalance,
+        colorTemperatureRange,
+        colorTemperature,
+        setColorTemperature,
         // video recording
         isRecordingSupported,
         isRecording,
