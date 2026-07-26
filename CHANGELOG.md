@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-07-26
+
+### Added
+- **`<CameraCapture>` component** — a drop-in camera UI wrapping `usePhotoCapture`. Props (`autoStart`, `facingMode`, `constraints`, `audio`, `mirror`, `type`, `quality`), events (`capture`, `recorded`, `error`, `ready`, `switch`), `#controls`/`#overlay` slots with a full capture scope, and exposed methods (`start`, `stop`, `capture`, `switchCamera`, `takePhoto`, `grabFrame`, `startRecording`, `stopRecording`, `camera`). Exported as a named export alongside `usePhotoCapture`.
+
 ## [1.3.0] - 2026-07-26
 
 ### Added

@@ -1,6 +1,118 @@
+import { ComponentOptionsMixin } from 'vue';
+import { ComponentProvideOptions } from 'vue';
 import { ComputedRef } from 'vue';
+import { DefineComponent } from 'vue';
+import { ExtractPropTypes } from 'vue';
+import { PropType } from 'vue';
+import { PublicProps } from 'vue';
 import { Ref } from 'vue';
+import { RendererElement } from 'vue';
+import { RendererNode } from 'vue';
 import { ShallowRef } from 'vue';
+import { VNode } from 'vue';
+
+/**
+ * A drop-in camera component wrapping `usePhotoCapture`. Renders a live `<video>`
+ * with default capture/flip controls, and exposes the composable's methods.
+ *
+ * @example
+ * <CameraCapture @capture="onPhoto" @error="onError" facing-mode="environment" />
+ */
+export declare const CameraCapture: DefineComponent<ExtractPropTypes<    {
+/** Start the camera automatically on mount. Default `true`. */
+autoStart: {
+type: BooleanConstructor;
+default: boolean;
+};
+/** Initial camera facing mode. */
+facingMode: {
+type: PropType<"user" | "environment">;
+default: undefined;
+};
+/** Custom `getUserMedia` video constraints (overrides `facingMode`). */
+constraints: {
+type: PropType<MediaStreamConstraints["video"]>;
+default: undefined;
+};
+/** Also request a microphone track (needed to record with sound). */
+audio: {
+type: BooleanConstructor;
+default: boolean;
+};
+/** Mirror the preview and capture. Defaults to auto (front camera only). */
+mirror: {
+type: BooleanConstructor;
+default: undefined;
+};
+/** Captured image mime type. */
+type: {
+type: StringConstructor;
+default: undefined;
+};
+/** Captured image quality `0..1` for lossy formats. */
+quality: {
+type: NumberConstructor;
+default: undefined;
+};
+}>, () => VNode<RendererNode, RendererElement, {
+[key: string]: any;
+}>, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {
+capture: (blob: Blob) => boolean;
+recorded: (blob: Blob) => boolean;
+error: (err: Error) => boolean;
+ready: () => true;
+switch: (deviceId?: string) => boolean;
+}, string, PublicProps, Readonly<ExtractPropTypes<    {
+/** Start the camera automatically on mount. Default `true`. */
+autoStart: {
+type: BooleanConstructor;
+default: boolean;
+};
+/** Initial camera facing mode. */
+facingMode: {
+type: PropType<"user" | "environment">;
+default: undefined;
+};
+/** Custom `getUserMedia` video constraints (overrides `facingMode`). */
+constraints: {
+type: PropType<MediaStreamConstraints["video"]>;
+default: undefined;
+};
+/** Also request a microphone track (needed to record with sound). */
+audio: {
+type: BooleanConstructor;
+default: boolean;
+};
+/** Mirror the preview and capture. Defaults to auto (front camera only). */
+mirror: {
+type: BooleanConstructor;
+default: undefined;
+};
+/** Captured image mime type. */
+type: {
+type: StringConstructor;
+default: undefined;
+};
+/** Captured image quality `0..1` for lossy formats. */
+quality: {
+type: NumberConstructor;
+default: undefined;
+};
+}>> & Readonly<{
+onCapture?: ((blob: Blob) => any) | undefined;
+onRecorded?: ((blob: Blob) => any) | undefined;
+onError?: ((err: Error) => any) | undefined;
+onReady?: (() => any) | undefined;
+onSwitch?: ((deviceId?: string | undefined) => any) | undefined;
+}>, {
+autoStart: boolean;
+type: string;
+facingMode: "user" | "environment";
+constraints: boolean | MediaTrackConstraints | undefined;
+audio: boolean;
+mirror: boolean;
+quality: number;
+}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
 
 /** Reactive permission state for the camera. */
 export declare type CameraPermission = 'prompt' | 'granted' | 'denied' | 'unknown';

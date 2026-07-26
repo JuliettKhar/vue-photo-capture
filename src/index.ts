@@ -588,3 +588,5 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
 }
 
 export type UsePhotoCapture = ReturnType<typeof usePhotoCapture>;
+
+export { CameraCapture } from './CameraCapture';

@@ -17,6 +17,7 @@ A Vue 3 Composition API library for capturing photos and video from a webcam or 
 - **Photo capture** — capture the current frame as a `Blob`, with mime type / quality / mirror options.
 - **Full-resolution stills** — native `ImageCapture.takePhoto()` / `grabFrame()`, with a canvas fallback.
 - **Video recording** — record clips via `MediaRecorder` (optional audio, pause/resume).
+- **Drop-in `<CameraCapture>` component** — a ready-made camera UI with slots, events and exposed methods.
 - **Auto-bound `<video>`** — pass a template ref and the stream binds itself (no manual `srcObject`).
 - **Output helpers** — `toObjectURL` (auto-revoking), `toDataURL`, `toFile` — no manual memory management.
 - **Camera switching** — list `devices`, switch by `deviceId`, or flip front/back.
@@ -193,6 +194,38 @@ await fetch('/upload', { method: 'POST', body: form });
 
 > **Resilience:** if the requested constraints can't be satisfied, `setUpVideoForScreenshot`
 > automatically retries once with relaxed constraints instead of throwing `OverconstrainedError`.
+
+## Component: `<CameraCapture>`
+
+Prefer a ready-made UI over wiring the composable yourself? Drop in the component:
+
+```vue
+<script setup>
+import { CameraCapture } from 'vue-photo-capture';
+
+function onPhoto(blob) { /* upload / preview */ }
+</script>
+
+<template>
+  <CameraCapture facing-mode="environment" @capture="onPhoto" @error="e => console.error(e)" />
+</template>
+```
+
+**Props:** `autoStart` (default `true`), `facingMode`, `constraints`, `audio`, `mirror`, `type`, `quality`.
+**Events:** `@capture(blob)`, `@recorded(blob)`, `@error(err)`, `@ready`, `@switch(deviceId?)`.
+**Slots:** `#controls` and `#overlay` — both receive a scope (`{ capture, switchCamera, start, stop, startRecording, stopRecording, isActive, isRecording, isFrontCamera, ready, error, devices }`). With no `#controls` slot, default Capture/Flip buttons are rendered.
+**Exposed** (via a template ref): `start`, `stop`, `capture`, `switchCamera`, `takePhoto`, `grabFrame`, `startRecording`, `stopRecording`, and the full `camera` composable.
+
+```vue
+<template>
+  <CameraCapture>
+    <template #controls="{ capture, switchCamera, isActive }">
+      <button :disabled="!isActive" @click="capture">Snap</button>
+      <button @click="switchCamera()">Flip</button>
+    </template>
+  </CameraCapture>
+</template>
+```
 
 ## Demo
 [Live demo](https://juliettkhar.github.io/vue-photo-capture/) · source in [`index.html`](./index.html).
