@@ -114,9 +114,10 @@
                 <span v-if="!isRecordingSupported" class="disabled-note">MediaRecorder unavailable in this browser</span>
             </div>
             <div class="clip" v-if="clipUrl">
-                <video :src="clipUrl" controls playsinline></video>
+                <video :key="clipUrl" :src="clipUrl" controls playsinline preload="auto"></video>
                 <div class="row">
                     <button class="secondary" @click="downloadClip">Download clip</button>
+                    <span class="muted" v-if="clipInfo">{{ clipInfo }}</span>
                 </div>
             </div>
         </div>
@@ -198,6 +199,7 @@
             const scanning = ref(false);
             const ready = ref(false);           // video has decoded a frame and has dimensions
             const recordSeconds = ref(0);
+            const clipInfo = ref('');
             const toast = ref('');
             const justCaptured = ref(false);
             let toastTimer = null;
@@ -248,6 +250,7 @@
                     const blob = await stopRecording();
                     if (clipUrl.value) URL.revokeObjectURL(clipUrl.value);
                     clipUrl.value = URL.createObjectURL(blob);
+                    clipInfo.value = `${(blob.size / 1024).toFixed(0)} KB · ${blob.type || 'video/webm'}`;
                     showToast('🎬 Clip recorded!');
                 } catch (e) { /* surfaced via `error` ref */ }
             };
@@ -285,7 +288,7 @@
             onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); clearInterval(recordTimer); });
 
             return {
-                video, previewCard, preview, clipUrl, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
+                video, previewCard, preview, clipUrl, clipInfo, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
                 isSupported, isActive, error, permission,
                 devices, currentDeviceId, isFrontCamera,
                 canTorch, canZoom, zoomRange, torchOn, zoom,
