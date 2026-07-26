@@ -1,25 +1,477 @@
 <!DOCTYPE html>
-<html lang="en-US" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Vue Photo Capture</title>
-    <meta name="description" content="A Vue 3 Composition API library for capturing photos and video from a webcam or camera device.">
-    <meta name="generator" content="VitePress v1.6.4">
-    <link rel="preload stylesheet" href="/vue-photo-capture/assets/style.CIJewV28.css" as="style">
-    <link rel="preload stylesheet" href="/vue-photo-capture/vp-icons.css" as="style">
-    
-    <script type="module" src="/vue-photo-capture/assets/app.DYkqzHOs.js"></script>
-    <link rel="preload" href="/vue-photo-capture/assets/inter-roman-latin.Di8DUHzh.woff2" as="font" type="font/woff2" crossorigin="">
-    <link rel="modulepreload" href="/vue-photo-capture/assets/chunks/theme.4Ijq6vNh.js">
-    <link rel="modulepreload" href="/vue-photo-capture/assets/chunks/framework.Ns3HCFxj.js">
-    <link rel="modulepreload" href="/vue-photo-capture/assets/index.md.G7ficJMn.lean.js">
-    <script id="check-dark-mode">(()=>{const e=localStorage.getItem("vitepress-theme-appearance")||"auto",a=window.matchMedia("(prefers-color-scheme: dark)").matches;(!e||e==="auto"?a:e==="dark")&&document.documentElement.classList.add("dark")})();</script>
-    <script id="check-mac-os">document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));</script>
-  </head>
-  <body>
-    <div id="app"><div class="Layout" data-v-5d98c3a5><!--[--><!--]--><!--[--><span tabindex="-1" data-v-0b0ada53></span><a href="#VPContent" class="VPSkipLink visually-hidden" data-v-0b0ada53>Skip to content</a><!--]--><!----><header class="VPNav" data-v-5d98c3a5 data-v-ae24b3ad><div class="VPNavBar" data-v-ae24b3ad data-v-6aa21345><div class="wrapper" data-v-6aa21345><div class="container" data-v-6aa21345><div class="title" data-v-6aa21345><div class="VPNavBarTitle" data-v-6aa21345 data-v-1168a8e4><a class="title" href="/vue-photo-capture/" data-v-1168a8e4><!--[--><!--]--><!----><span data-v-1168a8e4>Vue Photo Capture</span><!--[--><!--]--></a></div></div><div class="content" data-v-6aa21345><div class="content-body" data-v-6aa21345><!--[--><!--]--><div class="VPNavBarSearch search" data-v-6aa21345><!--[--><!----><div id="local-search"><button type="button" class="DocSearch DocSearch-Button" aria-label="Search"><span class="DocSearch-Button-Container"><span class="vp-icon DocSearch-Search-Icon"></span><span class="DocSearch-Button-Placeholder">Search</span></span><span class="DocSearch-Button-Keys"><kbd class="DocSearch-Button-Key"></kbd><kbd class="DocSearch-Button-Key">K</kbd></span></button></div><!--]--></div><nav aria-labelledby="main-nav-aria-label" class="VPNavBarMenu menu" data-v-6aa21345 data-v-dc692963><span id="main-nav-aria-label" class="visually-hidden" data-v-dc692963> Main Navigation </span><!--[--><!--[--><a class="VPLink link VPNavBarMenuLink" href="/vue-photo-capture/guide/getting-started.html" tabindex="0" data-v-dc692963 data-v-e56f3d57><!--[--><span data-v-e56f3d57>Guide</span><!--]--></a><!--]--><!--[--><a class="VPLink link VPNavBarMenuLink" href="/vue-photo-capture/api.html" tabindex="0" data-v-dc692963 data-v-e56f3d57><!--[--><span data-v-e56f3d57>API</span><!--]--></a><!--]--><!--[--><a class="VPLink link VPNavBarMenuLink" href="/vue-photo-capture/guide/recipes.html" tabindex="0" data-v-dc692963 data-v-e56f3d57><!--[--><span data-v-e56f3d57>Recipes</span><!--]--></a><!--]--><!--[--><a class="VPLink link vp-external-link-icon VPNavBarMenuLink" href="https://juliettkhar.github.io/vue-photo-capture/demo/" target="_blank" rel="noreferrer" tabindex="0" data-v-dc692963 data-v-e56f3d57><!--[--><span data-v-e56f3d57>Demo</span><!--]--></a><!--]--><!--]--></nav><!----><div class="VPNavBarAppearance appearance" data-v-6aa21345 data-v-6c893767><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-6c893767 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div><div class="VPSocialLinks VPNavBarSocialLinks social-links" data-v-6aa21345 data-v-0394ad82 data-v-7bc22406><!--[--><a class="VPSocialLink no-icon" href="https://github.com/JuliettKhar/vue-photo-capture" aria-label="github" target="_blank" rel="noopener" data-v-7bc22406 data-v-bd121fe5><span class="vpi-social-github"></span></a><!--]--></div><div class="VPFlyout VPNavBarExtra extra" data-v-6aa21345 data-v-bb2aa2f0 data-v-cf11d7a2><button type="button" class="button" aria-haspopup="true" aria-expanded="false" aria-label="extra navigation" data-v-cf11d7a2><span class="vpi-more-horizontal icon" data-v-cf11d7a2></span></button><div class="menu" data-v-cf11d7a2><div class="VPMenu" data-v-cf11d7a2 data-v-b98bc113><!----><!--[--><!--[--><!----><div class="group" data-v-bb2aa2f0><div class="item appearance" data-v-bb2aa2f0><p class="label" data-v-bb2aa2f0>Appearance</p><div class="appearance-action" data-v-bb2aa2f0><button class="VPSwitch VPSwitchAppearance" type="button" role="switch" title aria-checked="false" data-v-bb2aa2f0 data-v-5337faa4 data-v-1d5665e3><span class="check" data-v-1d5665e3><span class="icon" data-v-1d5665e3><!--[--><span class="vpi-sun sun" data-v-5337faa4></span><span class="vpi-moon moon" data-v-5337faa4></span><!--]--></span></span></button></div></div></div><div class="group" data-v-bb2aa2f0><div class="item social-links" data-v-bb2aa2f0><div class="VPSocialLinks social-links-list" data-v-bb2aa2f0 data-v-7bc22406><!--[--><a class="VPSocialLink no-icon" href="https://github.com/JuliettKhar/vue-photo-capture" aria-label="github" target="_blank" rel="noopener" data-v-7bc22406 data-v-bd121fe5><span class="vpi-social-github"></span></a><!--]--></div></div></div><!--]--><!--]--></div></div></div><!--[--><!--]--><button type="button" class="VPNavBarHamburger hamburger" aria-label="mobile navigation" aria-expanded="false" aria-controls="VPNavScreen" data-v-6aa21345 data-v-e5dd9c1c><span class="container" data-v-e5dd9c1c><span class="top" data-v-e5dd9c1c></span><span class="middle" data-v-e5dd9c1c></span><span class="bottom" data-v-e5dd9c1c></span></span></button></div></div></div></div><div class="divider" data-v-6aa21345><div class="divider-line" data-v-6aa21345></div></div></div><!----></header><!----><!----><div class="VPContent is-home" id="VPContent" data-v-5d98c3a5 data-v-1428d186><div class="VPHome" data-v-1428d186 data-v-8b561e3d><!--[--><!--]--><div class="VPHero VPHomeHero" data-v-8b561e3d data-v-4f9c455b><div class="container" data-v-4f9c455b><div class="main" data-v-4f9c455b><!--[--><!--]--><!--[--><h1 class="heading" data-v-4f9c455b><span class="name clip" data-v-4f9c455b>Vue Photo Capture</span><span class="text" data-v-4f9c455b>Camera capture for Vue 3</span></h1><p class="tagline" data-v-4f9c455b>Photos, video, cropping, QR scanning and hardware controls — a composable and a drop-in component.</p><!--]--><!--[--><!--]--><div class="actions" data-v-4f9c455b><!--[--><div class="action" data-v-4f9c455b><a class="VPButton medium brand" href="/vue-photo-capture/guide/getting-started.html" data-v-4f9c455b data-v-fa7799d5>Get Started</a></div><div class="action" data-v-4f9c455b><a class="VPButton medium alt" href="/vue-photo-capture/api.html" data-v-4f9c455b data-v-fa7799d5>API Reference</a></div><div class="action" data-v-4f9c455b><a class="VPButton medium alt" href="https://juliettkhar.github.io/vue-photo-capture/demo/" target="_blank" rel="noreferrer" data-v-4f9c455b data-v-fa7799d5>Live Demo</a></div><!--]--></div><!--[--><!--]--></div><!----></div></div><!--[--><!--]--><!--[--><!--]--><div class="VPFeatures VPHomeFeatures" data-v-8b561e3d data-v-a6181336><div class="container" data-v-a6181336><div class="items" data-v-a6181336><!--[--><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>📸 Photos & full-res stills</h2><p class="details" data-v-a3976bdc>Capture the current frame as a Blob, or full sensor resolution via ImageCapture with a canvas fallback.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>🎥 Video recording</h2><p class="details" data-v-a3976bdc>Record clips with MediaRecorder — optional audio, pause/resume.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>✂️ Crop, resize & EXIF</h2><p class="details" data-v-a3976bdc>Crop and downscale on capture; editImage() applies EXIF orientation to any blob.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>🔄 Camera switching</h2><p class="details" data-v-a3976bdc>List devices, switch by id, or flip front/back. Reactive resolution and mirror style.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>🔦 Hardware controls</h2><p class="details" data-v-a3976bdc>Torch, zoom, focus, exposure and white balance — all capability-guarded.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>🔍 QR / barcode scanning</h2><p class="details" data-v-a3976bdc>Native BarcodeDetector, with a documented ponyfill path for Safari/Firefox.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>🧩 Drop-in component</h2><p class="details" data-v-a3976bdc><CameraCapture> gives you a ready-made UI with slots, events and exposed methods.</p><!----></article><!--]--></div></div><div class="grid-4 item" data-v-a6181336><div class="VPLink no-icon VPFeature" data-v-a6181336 data-v-a3976bdc><!--[--><article class="box" data-v-a3976bdc><!----><h2 class="title" data-v-a3976bdc>♻️ Real cleanup</h2><p class="details" data-v-a3976bdc>Tracks stop on unmount, reactive state, SSR-safe support flags, shipped TypeScript types.</p><!----></article><!--]--></div></div><!--]--></div></div></div><!--[--><!--]--><div class="vp-doc container" style="" data-v-8b561e3d data-v-8e2d4988><!--[--><div style="position:relative;" data-v-8b561e3d><div></div></div><!--]--></div></div></div><footer class="VPFooter" data-v-5d98c3a5 data-v-e315a0ad><div class="container" data-v-e315a0ad><p class="message" data-v-e315a0ad>Released under the MIT License.</p><p class="copyright" data-v-e315a0ad>Copyright © Julia Kharlamova</p></div></footer><!--[--><!--]--></div></div>
-    <script>window.__VP_HASH_MAP__=JSON.parse("{\"api.md\":\"oDDjL-wD\",\"guide_camera-capture.md\":\"Dzw7JhLw\",\"guide_getting-started.md\":\"DV0sjpcg\",\"guide_recipes.md\":\"bcY_oPGx\",\"guide_use-photo-capture.md\":\"CJUxrNzf\",\"index.md\":\"G7ficJMn\"}");window.__VP_SITE_DATA__=JSON.parse("{\"lang\":\"en-US\",\"dir\":\"ltr\",\"title\":\"Vue Photo Capture\",\"description\":\"A Vue 3 Composition API library for capturing photos and video from a webcam or camera device.\",\"base\":\"/vue-photo-capture/\",\"head\":[],\"router\":{\"prefetchLinks\":true},\"appearance\":true,\"themeConfig\":{\"nav\":[{\"text\":\"Guide\",\"link\":\"/guide/getting-started\"},{\"text\":\"API\",\"link\":\"/api\"},{\"text\":\"Recipes\",\"link\":\"/guide/recipes\"},{\"text\":\"Demo\",\"link\":\"https://juliettkhar.github.io/vue-photo-capture/demo/\"}],\"sidebar\":{\"/\":[{\"text\":\"Guide\",\"items\":[{\"text\":\"Getting Started\",\"link\":\"/guide/getting-started\"},{\"text\":\"usePhotoCapture\",\"link\":\"/guide/use-photo-capture\"},{\"text\":\"<CameraCapture>\",\"link\":\"/guide/camera-capture\"},{\"text\":\"Recipes\",\"link\":\"/guide/recipes\"}]},{\"text\":\"Reference\",\"items\":[{\"text\":\"API\",\"link\":\"/api\"}]}]},\"socialLinks\":[{\"icon\":\"github\",\"link\":\"https://github.com/JuliettKhar/vue-photo-capture\"}],\"search\":{\"provider\":\"local\"},\"footer\":{\"message\":\"Released under the MIT License.\",\"copyright\":\"Copyright © Julia Kharlamova\"}},\"locales\":{},\"scrollOffset\":134,\"cleanUrls\":false}");</script>
-    
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Vue Photo Capture Demo</title>
+    <style>
+        :root { --accent: #4CAF50; --bg: #f6f7f9; --card: #fff; --border: #e2e5e9; --rec: #d93025; }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, Arial, sans-serif; background: var(--bg); margin: 0; color: #1c1e21; }
+        .app { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+        h1 { text-align: center; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .stage { position: relative; width: 100%; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 4 / 3; }
+        .stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .stage video.mirrored { transform: scaleX(-1); }
+        .rec-dot { position: absolute; top: 10px; left: 10px; display: flex; align-items: center; gap: 6px;
+                   background: rgba(0,0,0,.55); color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
+        .rec-dot::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--rec); animation: blink 1s steps(2) infinite; }
+        @keyframes blink { 50% { opacity: .2; } }
+        .countdown { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                     font-size: 96px; font-weight: 700; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.6);
+                     background: rgba(0,0,0,.25); pointer-events: none; }
+        .crop-frame { position: absolute; box-sizing: border-box; box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+                      border: 2px solid #fff; border-radius: 4px; pointer-events: auto; cursor: move; touch-action: none; }
+        .crop-frame .handle { position: absolute; right: -9px; bottom: -9px; width: 18px; height: 18px;
+                              background: #fff; border: 1px solid #999; border-radius: 50%; cursor: nwse-resize; touch-action: none; }
+        .crop-frame span { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+                           color: #fff; font-size: 11px; background: rgba(0,0,0,.5); padding: 2px 8px; border-radius: 999px; }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+        button { padding: 9px 16px; font-size: 15px; cursor: pointer; background: var(--accent); color: #fff; border: none; border-radius: 8px; }
+        button.secondary { background: #eceef1; color: #1c1e21; }
+        button.rec { background: var(--rec); }
+        button:disabled { opacity: .45; cursor: not-allowed; }
+        select, input[type=range] { padding: 6px; }
+        label { font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+        .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+        .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); }
+        .badge.on { background: #e6f4ea; border-color: #b7e1c3; color: #1e7a34; }
+        .badge.off { background: #fdecea; border-color: #f5c6c2; color: #b3261e; }
+        .badge.neutral { background: #eef1f4; }
+        .preview img, .clip video { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .muted { color: #65686c; font-size: 14px; }
+        .error { color: #b3261e; }
+        code { background: #eef1f4; padding: 1px 5px; border-radius: 4px; }
+        h3 { margin: 0 0 8px; font-size: 15px; }
+        .disabled-note { font-size: 12px; color: #8a8d91; }
+        .toast {
+            position: fixed; left: 50%; top: 24px; transform: translateX(-50%);
+            background: #1e7a34; color: #fff; padding: 12px 20px; border-radius: 999px;
+            font-size: 15px; box-shadow: 0 6px 20px rgba(0,0,0,.2); z-index: 1000;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toast-fade-enter-active, .toast-fade-leave-active { transition: opacity .25s, transform .25s; }
+        .toast-fade-enter-from, .toast-fade-leave-to { opacity: 0; transform: translate(-50%, -12px); }
+        .preview.highlight { animation: flash 1s ease; }
+        @keyframes flash { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: none; } }
+    </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="./dist/vue-photo-capture.umd.js"></script>
+</head>
+
+<body>
+<div id="app">
+    <transition name="toast-fade">
+        <div class="toast" v-if="toast">{{ toast }}</div>
+    </transition>
+    <div class="app">
+        <h1>📸 Vue Photo Capture</h1>
+
+        <!-- Reactive status -->
+        <div class="card">
+            <div class="badges">
+                <span class="badge" :class="isSupported ? 'on' : 'off'">getUserMedia: {{ isSupported ? 'yes' : 'no' }}</span>
+                <span class="badge" :class="isActive ? 'on' : 'neutral'">stream: {{ isActive ? 'active' : 'idle' }}</span>
+                <span class="badge neutral">permission: {{ permission }}</span>
+                <span class="badge" :class="isFrontCamera ? 'on' : 'neutral'">{{ isFrontCamera ? 'front' : 'back' }} camera</span>
+                <span class="badge" :class="canTorch ? 'on' : 'off'">torch</span>
+                <span class="badge" :class="canZoom ? 'on' : 'off'">zoom</span>
+                <span class="badge" :class="isImageCaptureSupported ? 'on' : 'off'">ImageCapture</span>
+                <span class="badge" :class="isRecordingSupported ? 'on' : 'off'">MediaRecorder</span>
+                <span class="badge" :class="isBarcodeSupported ? 'on' : 'off'">BarcodeDetector</span>
+            </div>
+            <p v-if="error" class="error">⚠️ {{ error.message }}</p>
+        </div>
+
+        <!-- Camera stage (stream auto-binds via the `videoRef` option) -->
+        <div class="card">
+            <div class="stage" ref="stageRef">
+                <video ref="video" :class="{ mirrored: isFrontCamera }" playsinline autoplay muted
+                       :style="{ cursor: canFocus ? 'crosshair' : 'default' }"
+                       @loadedmetadata="ready = true" @playing="ready = true" @click="onVideoTap"></video>
+                <div class="rec-dot" v-if="isRecording">REC {{ recordSeconds }}s</div>
+                <div class="countdown" v-if="countdown > 0">{{ countdown }}</div>
+                <div class="crop-frame" v-if="squareCrop"
+                     :style="{ left: cropBox.x + 'px', top: cropBox.y + 'px', width: cropBox.size + 'px', height: cropBox.size + 'px' }"
+                     @pointerdown="startDrag($event, 'move')">
+                    <span>drag to move · corner to resize</span>
+                    <div class="handle" @pointerdown.stop="startDrag($event, 'resize')"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <button v-if="!isActive" @click="start">Start camera</button>
+                <button v-else class="secondary" @click="stop">Stop</button>
+                <button @click="capture" :disabled="!isActive || !ready">
+                    {{ isActive && !ready ? 'Preparing…' : 'Capture photo' }}
+                </button>
+                <button class="secondary" @click="switchCamera()" :disabled="!isActive">Flip front/back</button>
+                <button class="secondary" @click="burst" :disabled="!isActive || !ready">Burst ×3</button>
+                <button class="secondary" @click="timer" :disabled="!isActive || !ready || countdown > 0">⏱ 3s</button>
+            </div>
+
+            <!-- Capture options (crop / resize) -->
+            <div class="row">
+                <label><input type="checkbox" v-model="squareCrop"/> Square crop</label>
+                <label>
+                    Max size:
+                    <select v-model.number="maxSize">
+                        <option :value="0">Off</option>
+                        <option :value="1024">1024</option>
+                        <option :value="640">640</option>
+                        <option :value="320">320</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Device picker -->
+            <div class="row" v-if="devices.length">
+                <label>
+                    Camera:
+                    <select :value="currentDeviceId" @change="switchCamera($event.target.value)">
+                        <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">
+                            {{ d.label || ('Camera ' + (d.deviceId || '').slice(0, 6)) }}
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <!-- Video recording -->
+        <div class="card">
+            <h3>Video recording</h3>
+            <div class="row">
+                <button v-if="!isRecording" class="rec" @click="record" :disabled="!isActive || !isRecordingSupported">● Record</button>
+                <button v-else class="secondary" @click="stopRecord">■ Stop ({{ recordSeconds }}s)</button>
+                <span v-if="!isRecordingSupported" class="disabled-note">MediaRecorder unavailable in this browser</span>
+            </div>
+            <div class="clip" v-if="clipUrl">
+                <video :key="clipUrl" :src="clipUrl" controls playsinline preload="auto"></video>
+                <div class="row">
+                    <button class="secondary" @click="downloadClip">Download clip</button>
+                    <span class="muted" v-if="clipInfo">{{ clipInfo }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware controls -->
+        <div class="card">
+            <h3>Hardware controls</h3>
+            <div class="row">
+                <button class="secondary" @click="toggleTorch" :disabled="!canTorch">
+                    Torch: {{ torchOn ? 'on' : 'off' }}
+                </button>
+                <span v-if="!canTorch" class="disabled-note">torch not supported on this camera</span>
+            </div>
+            <div class="row" v-if="canZoom && zoomRange">
+                <label style="flex:1">
+                    Zoom {{ Number(zoom).toFixed(1) }}×
+                    <input type="range" style="flex:1"
+                           :min="zoomRange.min" :max="zoomRange.max" :step="zoomRange.step"
+                           :value="zoom" @input="onZoom($event.target.value)"/>
+                </label>
+            </div>
+            <p v-else class="disabled-note">zoom not supported on this camera</p>
+        </div>
+
+        <!-- Advanced controls (focus / exposure / white balance) -->
+        <div class="card">
+            <h3>Advanced controls</h3>
+            <p class="disabled-note">Mostly Chromium/Android — desktop webcams usually don't expose these, so the sliders stay disabled. Tap the video to focus (where supported).</p>
+
+            <div class="row">
+                <label style="flex:1" :style="{ opacity: canFocus ? 1 : .45 }">
+                    Focus {{ focusDistance != null ? Number(focusDistance).toFixed(2) : '' }}
+                    <input type="range" style="flex:1" :disabled="!canFocus"
+                           :min="focusRange ? focusRange.min : 0" :max="focusRange ? focusRange.max : 1"
+                           :step="focusRange ? focusRange.step : 0.01"
+                           :value="focusDistance || 0" @input="onFocus($event.target.value)"/>
+                </label>
+                <span v-if="!canFocus" class="disabled-note">unsupported</span>
+            </div>
+
+            <div class="row">
+                <label style="flex:1" :style="{ opacity: canExposure ? 1 : .45 }">
+                    Exposure {{ exposureCompensation != null ? Number(exposureCompensation).toFixed(1) : '' }}
+                    <input type="range" style="flex:1" :disabled="!canExposure"
+                           :min="exposureRange ? exposureRange.min : -3" :max="exposureRange ? exposureRange.max : 3"
+                           :step="exposureRange ? exposureRange.step : 0.1"
+                           :value="exposureCompensation || 0" @input="onExposure($event.target.value)"/>
+                </label>
+                <span v-if="!canExposure" class="disabled-note">unsupported</span>
+            </div>
+
+            <div class="row">
+                <label style="flex:1" :style="{ opacity: canWhiteBalance ? 1 : .45 }">
+                    White balance {{ colorTemperature != null ? colorTemperature + 'K' : '' }}
+                    <input type="range" style="flex:1" :disabled="!canWhiteBalance"
+                           :min="colorTemperatureRange ? colorTemperatureRange.min : 2800"
+                           :max="colorTemperatureRange ? colorTemperatureRange.max : 6500"
+                           :step="colorTemperatureRange ? colorTemperatureRange.step : 100"
+                           :value="colorTemperature || 4000" @input="onWhiteBalance($event.target.value)"/>
+                </label>
+                <span v-if="!canWhiteBalance" class="disabled-note">unsupported</span>
+            </div>
+        </div>
+
+        <!-- Barcode / QR -->
+        <div class="card">
+            <h3>QR / barcode scanning</h3>
+            <div class="row">
+                <button class="secondary" @click="toggleScan" :disabled="!isActive || !isBarcodeSupported">
+                    {{ scanning ? 'Stop scanning' : 'Start scanning' }}
+                </button>
+                <span v-if="!isBarcodeSupported" class="disabled-note">BarcodeDetector unavailable (try Chrome/Android)</span>
+            </div>
+            <ul v-if="detectedCodes.length">
+                <li v-for="(c, i) in detectedCodes" :key="i"><code>{{ c.format }}</code> → {{ c.rawValue }}</li>
+            </ul>
+            <p v-else class="muted">No codes detected yet.</p>
+        </div>
+
+        <!-- Captured photo + output helpers -->
+        <div class="card preview" :class="{ highlight: justCaptured }" ref="previewCard" v-if="preview">
+            <h3>Captured photo</h3>
+            <img :src="preview" alt="Captured photo"/>
+            <div class="row">
+                <button class="secondary" @click="download">Download (toFile)</button>
+                <button class="secondary" @click="copyDataUrl">Copy data URL (toDataURL)</button>
+                <button class="secondary" @click="reset">Reset</button>
+            </div>
+            <p class="muted" v-if="dataUrlLen">data URL length: {{ dataUrlLen }} chars</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { usePhotoCapture } = window['vue-photo-capture'] || {};
+    const { createApp, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } = Vue;
+
+    createApp({
+        setup() {
+            const video = ref(null);
+            // videoRef auto-binds the stream to <video>; audio enables recording with sound.
+            const api = usePhotoCapture({ videoRef: video, audio: true });
+            const {
+                isSupported, isActive, error, permission,
+                devices, currentDeviceId, isFrontCamera,
+                canTorch, canZoom, zoomRange, torchOn, zoom,
+                canFocus, focusRange, focusDistance,
+                canExposure, exposureRange, exposureCompensation,
+                canWhiteBalance, colorTemperatureRange, colorTemperature,
+                isImageCaptureSupported, isBarcodeSupported, detectedCodes,
+                isRecordingSupported, isRecording,
+                setUpVideoForScreenshot, takePhoto, capturePhoto, captureBurst, captureAfter, stop: stopCamera,
+                switchCamera: switchCam, toObjectURL, toDataURL, toFile,
+                setTorch, setZoom, startScanning, stopScanning,
+                setFocusDistance, focusAt, setExposureCompensation, setColorTemperature,
+                startRecording, stopRecording,
+            } = api;
+
+            const previewCard = ref(null);
+            const preview = ref('');
+            const clipUrl = ref('');
+            const dataUrlLen = ref(0);
+            const scanning = ref(false);
+            const ready = ref(false);           // video has decoded a frame and has dimensions
+            const recordSeconds = ref(0);
+            const clipInfo = ref('');
+            const squareCrop = ref(false);
+            const maxSize = ref(0);
+            const countdown = ref(0);
+            const stageRef = ref(null);
+            const cropBox = reactive({ x: 0, y: 0, size: 0 }); // in stage (display) pixels
+            let drag = null;
+            const toast = ref('');
+
+            const clampCropBox = () => {
+                const el = stageRef.value; if (!el) return;
+                const r = el.getBoundingClientRect();
+                cropBox.size = Math.max(40, Math.min(cropBox.size, r.width, r.height));
+                cropBox.x = Math.max(0, Math.min(cropBox.x, r.width - cropBox.size));
+                cropBox.y = Math.max(0, Math.min(cropBox.y, r.height - cropBox.size));
+            };
+            const initCropBox = () => {
+                const el = stageRef.value; if (!el) return;
+                const r = el.getBoundingClientRect();
+                cropBox.size = Math.min(r.width, r.height) * 0.7;
+                cropBox.x = (r.width - cropBox.size) / 2;
+                cropBox.y = (r.height - cropBox.size) / 2;
+            };
+            const onDragMove = (e) => {
+                if (!drag) return;
+                const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+                if (drag.mode === 'move') { cropBox.x = drag.box.x + dx; cropBox.y = drag.box.y + dy; }
+                else { cropBox.size = drag.box.size + Math.max(dx, dy); }
+                clampCropBox();
+            };
+            const onDragEnd = () => {
+                drag = null;
+                window.removeEventListener('pointermove', onDragMove);
+                window.removeEventListener('pointerup', onDragEnd);
+            };
+            const startDrag = (e, mode) => {
+                e.preventDefault();
+                drag = { mode, startX: e.clientX, startY: e.clientY, box: { x: cropBox.x, y: cropBox.y, size: cropBox.size } };
+                window.addEventListener('pointermove', onDragMove);
+                window.addEventListener('pointerup', onDragEnd);
+            };
+            watch(squareCrop, (on) => { if (on) nextTick(initCropBox); });
+            const justCaptured = ref(false);
+            let toastTimer = null;
+            let recordTimer = null;
+
+            const showToast = (message) => {
+                toast.value = message;
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => { toast.value = ''; }, 2500);
+            };
+
+            const start = async () => {
+                ready.value = false;
+                try { await setUpVideoForScreenshot(); } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const stop = () => { scanning.value = false; ready.value = false; clearInterval(recordTimer); stopCamera(); };
+
+            const switchCamera = async (deviceId) => {
+                scanning.value = false;
+                ready.value = false;
+                try { await switchCam(deviceId); } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const buildCaptureOptions = () => {
+                const opts = { mirror: isFrontCamera.value };
+                if (maxSize.value) { opts.maxWidth = maxSize.value; opts.maxHeight = maxSize.value; }
+                if (squareCrop.value && video.value && stageRef.value) {
+                    // Map the on-screen crop box (stage px) to source pixels, inverting object-fit: cover.
+                    const r = stageRef.value.getBoundingClientRect();
+                    const VW = video.value.videoWidth, VH = video.value.videoHeight;
+                    const scale = Math.max(r.width / VW, r.height / VH);
+                    const offX = (r.width - VW * scale) / 2, offY = (r.height - VH * scale) / 2;
+                    let sx = (cropBox.x - offX) / scale;
+                    const sy = (cropBox.y - offY) / scale;
+                    const s = cropBox.size / scale;
+                    if (isFrontCamera.value) sx = VW - (sx + s); // preview is mirrored — un-mirror x
+                    opts.crop = { x: sx, y: sy, width: s, height: s };
+                }
+                return opts;
+            };
+
+            const capture = async () => {
+                try {
+                    const opts = buildCaptureOptions();
+                    // Crop is defined in preview-pixel space, so capture from the same <video>
+                    // frame (canvas). Without crop, use takePhoto for full sensor resolution.
+                    if (opts.crop) await capturePhoto(video.value, opts);
+                    else await takePhoto(opts);
+                    preview.value = toObjectURL();          // auto-revokes the previous URL
+                    showToast('📸 Photo captured!');
+                    justCaptured.value = false;
+                    await nextTick();
+                    justCaptured.value = true;
+                    previewCard.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const burst = async () => {
+                try {
+                    const shots = await captureBurst(3, { ...buildCaptureOptions(), interval: 250 });
+                    if (shots.length) preview.value = toObjectURL(shots[shots.length - 1]);
+                    showToast('📸 Burst: ' + shots.length + ' shots');
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const timer = async () => {
+                try {
+                    await captureAfter(3, { ...buildCaptureOptions(), onTick: (n) => { countdown.value = n; } });
+                    preview.value = toObjectURL();
+                    showToast('📸 Photo captured!');
+                } catch (e) { /* surfaced via `error` ref */ }
+                finally { countdown.value = 0; }
+            };
+
+            const record = () => {
+                try {
+                    startRecording();
+                    recordSeconds.value = 0;
+                    recordTimer = setInterval(() => { recordSeconds.value += 1; }, 1000);
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const stopRecord = async () => {
+                clearInterval(recordTimer);
+                try {
+                    const blob = await stopRecording();
+                    if (clipUrl.value) URL.revokeObjectURL(clipUrl.value);
+                    clipUrl.value = URL.createObjectURL(blob);
+                    clipInfo.value = `${(blob.size / 1024).toFixed(0)} KB · ${blob.type || 'video/webm'}`;
+                    showToast('🎬 Clip recorded!');
+                } catch (e) { /* surfaced via `error` ref */ }
+            };
+
+            const downloadClip = () => {
+                const a = document.createElement('a');
+                a.href = clipUrl.value; a.download = 'clip.webm'; a.click();
+            };
+
+            const toggleTorch = () => setTorch(!torchOn.value).catch(() => {});
+            const onZoom = (v) => setZoom(Number(v)).catch(() => {});
+            const onFocus = (v) => setFocusDistance(Number(v)).catch(() => {});
+            const onExposure = (v) => setExposureCompensation(Number(v)).catch(() => {});
+            const onWhiteBalance = (v) => setColorTemperature(Number(v)).catch(() => {});
+
+            // Tap-to-focus: translate a click on the video into normalized 0..1 coords.
+            const onVideoTap = (e) => {
+                if (!canFocus.value) return;
+                const r = e.currentTarget.getBoundingClientRect();
+                const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+                const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+                focusAt(x, y).then(() => showToast('🎯 Focusing…')).catch(() => {});
+            };
+
+            const toggleScan = () => {
+                if (scanning.value) { stopScanning(); scanning.value = false; }
+                else { startScanning(); scanning.value = true; }
+            };
+
+            const download = () => {
+                const file = toFile('photo.png');
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url; a.download = file.name; a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const copyDataUrl = async () => {
+                const dataUrl = await toDataURL();
+                dataUrlLen.value = dataUrl.length;
+                try { await navigator.clipboard.writeText(dataUrl); } catch (e) { /* clipboard blocked */ }
+            };
+
+            const reset = () => { preview.value = ''; dataUrlLen.value = 0; };
+
+            onMounted(start);
+            onBeforeUnmount(() => { stop(); clearTimeout(toastTimer); clearInterval(recordTimer); onDragEnd(); });
+
+            return {
+                video, previewCard, preview, clipUrl, clipInfo, dataUrlLen, scanning, ready, recordSeconds, toast, justCaptured,
+                squareCrop, maxSize, countdown, stageRef, cropBox, startDrag,
+                isSupported, isActive, error, permission,
+                devices, currentDeviceId, isFrontCamera,
+                canTorch, canZoom, zoomRange, torchOn, zoom,
+                canFocus, focusRange, focusDistance,
+                canExposure, exposureRange, exposureCompensation,
+                canWhiteBalance, colorTemperatureRange, colorTemperature,
+                isImageCaptureSupported, isBarcodeSupported, detectedCodes,
+                isRecordingSupported, isRecording,
+                start, stop, switchCamera, capture, burst, timer, record, stopRecord, downloadClip,
+                toggleTorch, onZoom, onFocus, onExposure, onWhiteBalance, onVideoTap,
+                toggleScan, download, copyDataUrl, reset,
+            };
+        },
+    }).mount('#app');
+</script>
+</body>
 </html>
