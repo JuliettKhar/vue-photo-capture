@@ -307,7 +307,7 @@ const { setUpVideoForScreenshot, takePhoto } = usePhotoCapture();
 ```
 
 ## Demo
-[Live demo](https://juliettkhar.github.io/vue-photo-capture/demo/) · source in [`index.html`](./index.html).
+[Live demo](https://juliettkhar.github.io/vue-photo-capture/) · source in [`index.html`](./index.html).
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.
