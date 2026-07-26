@@ -11,6 +11,7 @@ export default defineConfig({
     themeConfig: {
         nav: [
             { text: 'Guide', link: '/guide/getting-started' },
+            { text: 'Nuxt', link: '/guide/nuxt' },
             { text: 'API', link: '/api' },
             { text: 'Recipes', link: '/guide/recipes' },
             { text: 'Demo', link: 'https://juliettkhar.github.io/vue-photo-capture/demo/' },
@@ -23,6 +24,7 @@ export default defineConfig({
                         { text: 'Getting Started', link: '/guide/getting-started' },
                         { text: 'usePhotoCapture', link: '/guide/use-photo-capture' },
                         { text: '<CameraCapture>', link: '/guide/camera-capture' },
+                        { text: 'Nuxt', link: '/guide/nuxt' },
                         { text: 'Recipes', link: '/guide/recipes' },
                     ],
                 },
