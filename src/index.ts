@@ -56,8 +56,10 @@ export interface CaptureOptions {
 /** Compute a crop rect clamped to `[0..srcW] × [0..srcH]`, defaulting to the whole image. */
 function resolveCrop(srcW: number, srcH: number, crop?: CropRect): CropRect {
     if (!crop) return { x: 0, y: 0, width: srcW, height: srcH };
-    const x = Math.max(0, Math.min(crop.x, srcW));
-    const y = Math.max(0, Math.min(crop.y, srcH));
+    // Clamp the origin to srcW-1/srcH-1 so at least one pixel of width/height remains
+    // in-bounds even for a degenerate crop that starts at or past the far edge.
+    const x = Math.max(0, Math.min(crop.x, srcW - 1));
+    const y = Math.max(0, Math.min(crop.y, srcH - 1));
     return {
         x,
         y,
@@ -430,12 +432,15 @@ export function usePhotoCapture(options: PhotoCaptureOptions = {}) {
             try {
                 let blob: Blob = await getImageCapture().takePhoto();
                 // The ImageCapture blob is full-res and may carry EXIF orientation;
-                // post-process only when the caller asked for crop/resize/mirror.
+                // re-encode when the caller asked for crop/resize/mirror or a specific
+                // output type/quality (which ImageCapture.takePhoto() ignores).
                 const needsEdit =
                     !!captureOptions.crop ||
                     captureOptions.maxWidth != null ||
                     captureOptions.maxHeight != null ||
-                    !!captureOptions.mirror;
+                    !!captureOptions.mirror ||
+                    captureOptions.type != null ||
+                    captureOptions.quality != null;
                 if (needsEdit) blob = await editImage(blob, captureOptions);
                 screenshotVideoBlob.value = blob;
                 return blob;

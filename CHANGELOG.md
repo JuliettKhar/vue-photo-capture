@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.6.0] - 2026-07-26
 
 ### Added
-- **Crop & resize on capture** — `capturePhoto` and `takePhoto` accept `crop` (source-pixel rect, clamped), `maxWidth` and `maxHeight` (downscale-only, aspect preserved).
+- **Crop & resize on capture** — `capturePhoto` and `takePhoto` accept `crop` (source-pixel rect, clamped), `maxWidth` and `maxHeight` (downscale-only, asвотpect preserved).
 - **`editImage(blob, options)`** — exported standalone helper that applies **EXIF orientation** (via `createImageBitmap({ imageOrientation: 'from-image' })`), crop, resize and mirror to any blob, then re-encodes. `takePhoto` runs it on the `ImageCapture` result when crop/resize/mirror is requested.
 
 ## [1.5.0] - 2026-07-26
