@@ -63,6 +63,22 @@ import { CameraCapture } from 'vue-photo-capture';
 </template>
 ```
 
+## Nuxt
+
+Add the module to auto-import the composable/helpers and register `<CameraCapture>` globally
+(SSR-safe):
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['vue-photo-capture/nuxt'],
+});
+```
+
+`usePhotoCapture` and `editImage` are then available without importing, and `<CameraCapture>`
+works in any template. Configure via the `vuePhotoCapture` key (`composables`, `component`,
+`prefix`).
+
 ## Next steps
 
 - [usePhotoCapture](/guide/use-photo-capture) — the composable in depth

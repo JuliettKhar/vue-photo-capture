@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-07-26
+
+### Added
+- **Nuxt module** — `vue-photo-capture/nuxt` auto-imports `usePhotoCapture`/`editImage` and registers `<CameraCapture>` globally (options: `composables`, `component`, `prefix`). SSR-safe. Added an `exports` map with the `./nuxt` subpath; `@nuxt/kit` is an optional peer dependency.
+
 ## [1.7.0] - 2026-07-26
 
 ### Added

@@ -281,8 +281,33 @@ function onPhoto(blob) { /* upload / preview */ }
 </template>
 ```
 
+## Nuxt
+
+A Nuxt module auto-imports the composable/helpers and registers `<CameraCapture>` globally
+(SSR-safe — browser APIs are guarded and the component starts on mount):
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['vue-photo-capture/nuxt'],
+  // optional:
+  // vuePhotoCapture: { composables: true, component: true, prefix: '' },
+});
+```
+
+```vue
+<script setup>
+// usePhotoCapture / editImage are auto-imported — no import needed
+const { setUpVideoForScreenshot, takePhoto } = usePhotoCapture();
+</script>
+
+<template>
+  <CameraCapture @capture="onPhoto" />
+</template>
+```
+
 ## Demo
-[Live demo](https://juliettkhar.github.io/vue-photo-capture/) · source in [`index.html`](./index.html).
+[Live demo](https://juliettkhar.github.io/vue-photo-capture/demo/) · source in [`index.html`](./index.html).
 
 ## Contributing
 Contributions are welcome! Please open an issue or submit a pull request on GitHub.

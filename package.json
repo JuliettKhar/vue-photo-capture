@@ -1,9 +1,21 @@
 {
   "name": "vue-photo-capture",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "A Vue 3 Composition API library for capturing photos using a webcam or camera device.",
   "main": "dist/vue-photo-capture.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vue-photo-capture.mjs",
+      "require": "./dist/vue-photo-capture.umd.js"
+    },
+    "./nuxt": {
+      "types": "./dist/nuxt.d.ts",
+      "import": "./dist/nuxt.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "sideEffects": false,
   "files": [
     "dist",
@@ -12,7 +24,7 @@
   ],
   "scripts": {
     "serve": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.nuxt.config.mjs",
     "lint": "eslint src",
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -42,6 +54,7 @@
   "devDependencies": {
     "@eslint/js": "~10.0.1",
     "@jest/globals": "~30.2.0",
+    "@nuxt/kit": "^4.5.0",
     "@playwright/test": "^1.62.0",
     "@types/jest": "~29.5.12",
     "@vitejs/plugin-vue": "~6.0.8",
@@ -61,6 +74,12 @@
     "vue": "~3.5.11"
   },
   "peerDependencies": {
-    "vue": "^3.0.0"
+    "vue": "^3.0.0",
+    "@nuxt/kit": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    }
   }
 }
