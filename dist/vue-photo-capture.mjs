@@ -137,7 +137,7 @@ function u(e, t, n) {
 		width: e,
 		height: t
 	};
-	let r = Math.max(0, Math.min(n.x, e)), i = Math.max(0, Math.min(n.y, t));
+	let r = Math.max(0, Math.min(n.x, e - 1)), i = Math.max(0, Math.min(n.y, t - 1));
 	return {
 		x: r,
 		y: i,
@@ -270,7 +270,7 @@ function m(t = {}) {
 	}, ce = async (e = {}) => {
 		if (m && Y()) try {
 			let t = await se().takePhoto();
-			return (e.crop || e.maxWidth != null || e.maxHeight != null || e.mirror) && (t = await f(t, e)), _.value = t, t;
+			return (e.crop || e.maxWidth != null || e.maxHeight != null || e.mirror || e.type != null || e.quality != null) && (t = await f(t, e)), _.value = t, t;
 		} catch {}
 		return oe(X(), e);
 	}, le = async () => {
