@@ -51,7 +51,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "~10.0.1",
-    "@jest/globals": "~30.2.0",
+    "@jest/globals": "~30.4.1",
     "@nuxt/kit": "^4.5.0",
     "@playwright/test": "^1.62.0",
     "@types/jest": "~29.5.12",
