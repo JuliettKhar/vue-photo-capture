@@ -54,7 +54,7 @@
     "@jest/globals": "~30.2.0",
     "@nuxt/kit": "^4.5.0",
     "@playwright/test": "^1.62.0",
-    "@types/jest": "~29.5.12",
+    "@types/jest": "~30.0.0",
     "@vitejs/plugin-vue": "~6.0.8",
     "@vue/eslint-config-typescript": "~14.9.0",
     "@vue/test-utils": "~2.4.6",
