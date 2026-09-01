@@ -63,7 +63,7 @@
     "gh-pages": "^6.3.0",
     "jest": "~29.7.0",
     "jest-environment-jsdom": "~30.4.1",
-    "lint-staged": "~15.5.1",
+    "lint-staged": "~17.4.1",
     "ts-jest": "~29.4.12",
     "typescript": "~5.9.3",
     "vite": "~8.1.5",
